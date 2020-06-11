@@ -1,0 +1,106 @@
+---
+  # DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns: 
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.deluge.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "{{ containers.deluge.subdomain }}"
+    - "{{ containers.deluge.subdomain }}/openvpn"
+
+  # Verify required files with correct permissions are created
+- name: Copy required files to container folders
+  copy:
+    src: "files/{{ item }}"
+    dest: "{{ directories.container_root }}/{{ containers.deluge.subdomain }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0550
+  loop: 
+    - "openvpn/ca-aes-128-cbc-udp-dns.ovpn"
+    - "init.sh"
+
+  # Standup the container in inventory
+- name: Start Deluge
+  docker_container:
+    name: "{{ containers.deluge.subdomain }}"
+    hostname: "{{ containers.deluge.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: binhex/arch-delugevpn
+    links: # Prevent container creation and startup until linked containers are running 
+      - "{{ containers.rclone.subdomain }}:{{ containers.rclone.subdomain }}"
+    # Startup script
+    command: ".{{ directories.config_dir }}/init.sh"
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    mounts: 
+      - type: bind 
+        source: "{{ directories.container_root }}/{{ containers.deluge.subdomain }}"
+        target: "{{ directories.config_dir }}"
+      - type: bind 
+        source: "{{ directories.data_dir }}"
+        target: "{{ directories.data_dir }}"
+    # Required capabilities for container to function properly
+    capabilities: 
+      - "NET_ADMIN"
+    env:
+      DEBUG: "{{ deluge.debug }}" # Debug Option
+      DELUGE_DAEMON_LOG_LEVEL: "{{ deluge.deluge_daemon_log_level }}" # Deluge Daemon Log Level
+      DELUGE_WEB_LOG_LEVEL: "{{ deluge.deluge_web_log_level }}" # Deluge Web Log Level
+      ENABLE_PRIVOXY: "{{ deluge.enable_privoxy }}" # Enable Privoxy
+      LAN_NETWORK: "{{ deluge.lan_network }}" # Local Subnet
+      NAME_SERVERS: "{{ deluge.name_servers }}" # VPN DNS Nameservers
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      STRICT_PORT_FORWARD: "{{ deluge.strict_port_forward }}"
+      UMASK: "{{ deluge.umask }}" # File UMASK
+      VPN_ENABLED: "{{ deluge.vpn_enabled }}" # VPN Enabled
+      VPN_PASS: "{{ deluge.vpn_pass }}" # VPN Password
+      VPN_PROV: "{{ deluge.vpn_prov }}" # VPN Provider
+      VPN_USER: "{{ deluge.vpn_user }}" # VPN Username
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.deluge.subdomain }}"
+    # Pass VPN TUN Device to container
+    devices: "/dev/net/tun:/dev/net/tun"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.deluge-rtr.entrypoints: "https"
+      traefik.http.routers.deluge-rtr.rule: "Host(`{{ containers.deluge.subdomain }}.{{ containers.deluge.tld }}`)"
+      traefik.http.routers.deluge-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.deluge-rtr.service: "deluge-svc"
+      traefik.http.services.deluge-svc.loadbalancer.server.port: "{{ containers.deluge.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.deluge-rtr.middlewares: "chain-oauth@file"
+...

@@ -1,0 +1,80 @@
+---
+  # DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns: 
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.mellow.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ containers.mellow.subdomain }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+
+  # Verify templated required files with correct permissions are created
+- name: Adding Settings File
+  template:
+    src: "templates/settings.json.j2"
+    dest: "{{ directories.container_root }}/{{ containers.mellow.subdomain }}/settings.json"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0440
+
+  # Standup the container in inventory
+- name: Start Mellow
+  docker_container:
+    name: "{{ containers.mellow.subdomain }}"
+    hostname: "{{ containers.mellow.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: voidp/mellow
+    links: # Prevent container creation and startup until linked containers are running 
+    - "{{ containers.ombi.subdomain.0 }}:{{ containers.ombi.subdomain.0 }}"
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    mounts: 
+      - type: bind 
+        source: "{{ directories.container_root }}/{{ mellow.rclone.subdomain }}"
+        target: /usr/src/app/data
+    env:
+      PORT: "5060" # Mellow port
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.mellow.subdomain }}"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.mellow-rtr.entrypoints: "https"
+      traefik.http.routers.mellow-rtr.rule: "Host(`{{ containers.mellow.subdomain }}.{{ containers.mellow.tld }}`)"
+      traefik.http.routers.mellow-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.mellow-rtr.service: "mellow-svc"
+      traefik.http.services.mellow-svc.loadbalancer.server.port: "{{ containers.mellow.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.mellow-rtr.middlewares: "chain-oauth@file"
+...

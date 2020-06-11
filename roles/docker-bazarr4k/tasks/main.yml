@@ -1,0 +1,83 @@
+---
+  # DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns: 
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.bazarr4k.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ containers.bazarr4k.subdomain }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+
+  # Verify templated required files with correct permissions are created
+- name: copy config.ini template to host
+  template:
+    src: "templates/config.ini.j2"
+    dest: "{{ directories.container_root }}/{{ containers.bazarr4k.subdomain }}{{ directories.config_dir }}/config.ini"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0660
+
+  # Standup the container in inventory
+- name: Start Bazarr 4K
+  docker_container:
+    name: "{{ containers.bazarr4k.subdomain }}"
+    hostname: "{{ containers.bazarr4k.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: linuxserver/bazarr
+    links: # Prevent container creation and startup until linked containers are running 
+    - "{{ containers.radarr4k.subdomain }}:{{ containers.radarr4k.subdomain }}"
+    - "{{ containers.sonarr4k.subdomain }}:{{ containers.sonarr4k.subdomain }}"
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    mounts: 
+      - type: bind 
+        source: "{{ directories.container_root }}/{{ containers.bazarr4k.subdomain }}"
+        target: "{{ directories.config_dir }}"
+      - type: bind 
+        source: "{{ directories.data_dir }}"
+        target: "{{ directories.data_dir }}"
+    env:
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.bazarr4k.subdomain }}"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.bazarr4k-rtr.entrypoints: "https"
+      traefik.http.routers.bazarr4k-rtr.rule: "Host(`{{ containers.bazarr4k.subdomain }}.{{ containers.bazarr4k.tld }}`)"
+      traefik.http.routers.bazarr4k-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.bazarr4k-rtr.service: "bazarr4k-svc"
+      traefik.http.services.bazarr4k-svc.loadbalancer.server.port: "{{ containers.bazarr4k.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.bazarr4k-rtr.middlewares: "chain-oauth@file"
+...

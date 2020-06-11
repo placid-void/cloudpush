@@ -1,0 +1,47 @@
+---
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.data_dir }}/{{ directories.mergerfs }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+  
+  # Standup the container in inventory
+- name: Start MergerFS
+  docker_container:
+    name: "{{ containers.mergerfs.subdomain }}"
+    hostname: "{{ containers.mergerfs.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: hotio/mergerfs
+    mounts: 
+      - type: bind 
+        source: "{{ directories.data_dir }}"
+        target: "{{ directories.data_dir }}"
+        propagation: slave
+      - type: bind
+        source: "{{ directories.drive_root }}"
+        target: "{{ directories.drive_root }}"
+        propagation: shared
+    capabilities: 
+      - "SYS_ADMIN"
+    devices: "/dev/fuse"
+    entrypoint: "mergerfs -o async_read=false,cache.files=auto-full,dropcacheonclose=true,use_ino,allow_other,func.getattr=newest,category.create=epff,minfreespace=0,umask=002,uid={{ users.primary.uid }},gid={{ users.primary.gid }},fsname=mergerfs,nonempty,{{ directories.data_dir }}/{{ directories.cache_dir }}/mergerfs=RW:{{ directories.drive_root }}=NC {{ directories.drive_root }}"
+    env:
+      PUID: "{{ users.primary.uid }}"
+      PGID: "{{ users.primary.gid }}"
+    security_opts: "apparmor:unconfined"
+    user: "{{ users.primary.uid }}:{{ users.primary.gid }}"
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.mergerfs.subdomain }}"
+    purge_networks: yes
+    pull: true
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+...

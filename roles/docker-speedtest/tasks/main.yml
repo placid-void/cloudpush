@@ -1,0 +1,54 @@
+---
+  # DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns: 
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.speedtest.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # Standup the container in inventory
+- name: Start Speedtest
+  docker_container:
+    name: "{{ containers.speedtest.subdomain }}"
+    hostname: "{{ containers.speedtest.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: adolfintel/speedtest
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    env:
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      TITLE: "{{ domain }}" # Title that should be displayed on the WebUI
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.speedtest.subdomain }}"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.speedtest-rtr.entrypoints: "https"
+      traefik.http.routers.speedtest-rtr.rule: "Host(`{{ containers.speedtest.subdomain }}.{{ containers.speedtest.tld }}`)"
+      traefik.http.routers.speedtest-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.speedtest-rtr.service: "speedtest-svc"
+      traefik.http.services.speedtest-svc.loadbalancer.server.port: "{{ containers.speedtest.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.speedtest-rtr.middlewares: "chain-no-auth@file"
+...

@@ -1,0 +1,42 @@
+---
+  # Standup the container in inventory
+- name: Start Syncarr Sonarr
+  docker_container:
+    name: "{{ containers.syncarr_sonarr.subdomain }}"
+    hostname: "{{ containers.syncarr_sonarr.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: syncarr/syncarr:latest
+    links: # Prevent container creation and startup until linked containers are running 
+    - "{{ containers.sonarr.subdomain }}:{{ containers.sonarr.subdomain }}"
+    - "{{ containers.sonarr4k.subdomain }}:{{ containers.sonarr4k.subdomain }}"
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    env:
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      SONARR_A_URL: "http://{{ containers.sonarr.subdomain }}:{{ containers.sonarr.port }}" # Normal Sonarr host
+      SONARR_A_KEY: "{{ api_keys.sonarr }}" # Normal Sonarr API key
+      SONARR_A_PROFILE: "Any" # Normal Sonarr profile
+      SONARR_A_PATH: "{{ directories.drive_root }}/{{ directories.tvshows }}" # Normal Sonarr path
+      SONARR_B_URL: "http://{{ containers.sonarr4k.subdomain }}:{{ containers.sonarr4k.port }}" # 4K Sonarr host
+      SONARR_B_KEY: "{{ api_keys.sonarr4k }}" # 4K Sonarr API key
+      SONARR_B_PROFILE: "Ultra-HD" # 4K Sonarr profile
+      SONARR_B_PATH: "{{ directories.drive_root }}/{{ directories.tvshows_4k }}" # 4K Sonarr path
+      SYNC_INTERVAL_SECONDS:  "86400" # How often to perform the sync
+      SYNCARR_BIDIRECTIONAL_SYNC: "1" # Should Syncarr sync between both servers?
+      SYNCARR_AUTO_SEARCH: "1" # Should Syncarr search on add?
+      SYNCARR_MONITOR_NEW_CONTENT: "1" # Should new content be monitored?
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.syncarr_sonarr.subdomain }}"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+...
+  

@@ -1,0 +1,6 @@
+.git
+.VSCodeCounter/
+ansible.cfg
+inventory
+README.md
+vars.yml

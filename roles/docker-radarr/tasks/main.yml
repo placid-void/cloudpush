@@ -1,0 +1,73 @@
+---
+# DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns: 
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.radarr.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ containers.radarr.subdomain }}/"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+
+  # Standup the container in inventory
+- name: Start Radarr
+  docker_container:
+    name: "{{ containers.radarr.subdomain }}"
+    hostname: "{{ containers.radarr.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: linuxserver/radarr
+    links: # Prevent container creation and startup until linked containers are running 
+    - "{{ containers.nzbget.subdomain }}:{{ containers.nzbget.subdomain }}"
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    mounts: 
+      - type: bind 
+        source: "{{ directories.container_root }}/{{ containers.radarr.subdomain }}"
+        target: "{{ directories.config_dir }}"
+      - type: bind 
+        source: "{{ directories.data_dir }}"
+        target: "{{ directories.data_dir }}"
+    env:
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.radarr.subdomain }}"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.radarr-rtr.entrypoints: "https"
+      traefik.http.routers.radarr-rtr.rule: "Host(`{{ containers.radarr.subdomain }}.{{ containers.radarr.tld }}`)"
+      traefik.http.routers.radarr-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.radarr-rtr.service: "radarr-svc"
+      traefik.http.services.radarr-svc.loadbalancer.server.port: "{{ containers.radarr.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.radarr-rtr.middlewares: "chain-oauth@file"
+...

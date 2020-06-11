@@ -1,0 +1,101 @@
+{
+  "core": {
+    "debug": false
+  },
+  "automatic": {
+    "movies": {
+      "anticipated": 100,
+      "boxoffice": 100,
+      "interval": 24,
+      "played": 100,
+      "popular": 100,
+      "trending": 100,
+      "watched": 100
+    },
+    "shows": {
+      "anticipated": 100,
+      "interval": 48,
+      "played": 100,
+      "popular": 100,
+      "trending": 100,
+      "watched": 100
+    }
+  },
+  "filters": {
+    "movies": {
+      "disabled_for": [],
+      "allowed_countries": [
+        "us",
+        "gb",
+        "ca"
+      ],
+      "allowed_languages": [
+        "en"
+      ],
+      "blacklisted_genres": [
+      ],
+      "blacklisted_max_runtime": 0,
+      "blacklisted_min_runtime": 60,
+      "blacklisted_min_year": 2000,
+      "blacklisted_max_year": 2019,
+      "blacklisted_title_keywords": [
+      ],
+      "blacklisted_tmdb_ids": [],
+      "rotten_tomatoes": ""
+    },
+    "shows": {
+      "disabled_for": [],
+      "allowed_countries": [
+        "us",
+        "gb",
+        "ca"
+      ],
+      "allowed_languages": [],
+      "blacklisted_genres": [
+      ],
+      "blacklisted_networks": [
+      ],
+      "blacklisted_max_runtime": 0,
+      "blacklisted_min_runtime": 15,
+      "blacklisted_min_year": 2000,
+      "blacklisted_max_year": 2019,
+      "blacklisted_title_keywords": [],
+      "blacklisted_tvdb_ids": []
+    }
+  },
+  "notifications": {
+    "pushover": {
+      "service": "pushover",
+      "app_token": "",
+      "user_token": "",
+      "priority": 0
+    },
+    "slack": {
+      "service": "slack",
+      "webhook_url": ""
+    },
+    "verbose": true
+  },
+  "radarr": {
+    "api_key": "{{ api_keys.radarr }}",
+    "minimum_availability": "released",
+    "quality": "Any",
+    "root_folder": "{{ directories.drive_root }}/{{ directories.movies }}",
+    "url": "http://{{ containers.radarr.subdomain }}:{{ containers.radarr.port }}/"
+  },
+  "sonarr": {
+    "api_key": "{{ api_keys.sonarr }}",
+    "language": "English",
+    "quality": "Any",
+    "root_folder": "{{ directories.drive_root }}/{{ directories.tvshows }}",
+    "tags": {},
+    "url": "http://{{ containers.sonarr.subdomain }}:{{ containers.sonarr.port }}/"
+  },
+  "trakt": {
+    "client_id": "{{ trakttv.client_id }}",
+    "client_secret": "{{ trakttv.client_secret }}"
+  },
+  "omdb": {
+    "api_key": ""
+  }
+}

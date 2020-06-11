@@ -1,0 +1,125 @@
+[global]
+sonarr_server_ids = 1,2
+radarr_server_ids = 1,2
+lidarr_server_ids = 1
+tautulli_server_ids = 1
+ombi_server_ids = 1,2
+sickchill_server_ids = false
+unifi_server_ids = false
+
+[influxdb]
+url = {{ containers.influxdb.subdomain }}
+port = {{ containers.influxdb.port }}
+ssl = false
+verify_ssl = false
+username = {{ influxdb.username }}
+password = {{ influxdb.password }}
+
+[tautulli-1]
+url = {{ containers.tautulli.subdomain }}:{{ containers.tautulli.port }}
+fallback_ip = 1.1.1.1
+apikey = {{ api_keys.tautulli }}
+ssl = false
+verify_ssl = false
+get_activity = true
+get_activity_run_seconds = 30
+get_stats = true
+get_stats_run_seconds = 3600
+
+[sonarr-1]
+url = {{ containers.sonarr.subdomain }}:{{ containers.sonarr.port }}
+apikey = {{ api_keys.sonarr }}
+ssl = false
+verify_ssl = false
+missing_days = 7
+missing_days_run_seconds = 300
+future_days = 1
+future_days_run_seconds = 300
+queue = true
+queue_run_seconds = 300
+
+[sonarr-2]
+url = {{ containers.sonarr4k.subdomain }}:{{ containers.sonarr4k.port }}
+apikey = {{ api_keys.sonarr4k }}
+ssl = false
+verify_ssl = false
+missing_days = 7
+missing_days_run_seconds = 300
+future_days = 1
+future_days_run_seconds = 300
+queue = true
+queue_run_seconds = 300
+
+[radarr-1]
+url = {{ containers.radarr.subdomain }}:{{ containers.radarr.port }}
+apikey = {{ api_keys.radarr }}
+ssl = false
+verify_ssl = false
+queue = true
+queue_run_seconds = 300
+get_missing = true
+get_missing_run_seconds = 300
+
+[radarr-2]
+url = {{ containers.radarr4k.subdomain }}:{{ containers.radarr4k.port }}
+apikey = {{ api_keys.radarr4k }}
+ssl = false
+verify_ssl = false
+queue = true
+queue_run_seconds = 300
+get_missing = true
+get_missing_run_seconds = 300
+
+[lidarr-1]
+url = {{ containers.lidarr.subdomain }}:{{ containers.lidarr.port }}
+apikey = {{ api_keys.lidarr }}
+ssl = false
+verify_ssl = false
+missing_days = 30
+missing_days_run_seconds = 300
+future_days = 30
+future_days_run_seconds = 300
+queue = true
+queue_run_seconds = 300
+
+[ombi-1]
+url = {{ containers.ombi.subdomain.0 }}:{{ containers.ombi.port }}
+apikey = {{ api_keys.ombi }}
+ssl = false
+verify_ssl = false
+get_request_type_counts = true
+request_type_run_seconds = 300
+get_request_total_counts = true
+request_total_run_seconds = 300
+get_issue_status_counts = true
+issue_status_run_seconds = 300
+
+[ombi-2]
+url = {{ containers.ombi4k.subdomain.0 }}:{{ containers.ombi4k.port }}
+apikey = {{ api_keys.ombi4k }}
+ssl = false
+verify_ssl = false
+get_request_type_counts = true
+request_type_run_seconds = 300
+get_request_total_counts = true
+request_total_run_seconds = 300
+get_issue_status_counts = true
+issue_status_run_seconds = 300
+
+[sickchill-1]
+url = sickchill.domain.tld:8081
+apikey = xxxxxxxxxxxxxxxx
+ssl = false
+verify_ssl = false
+get_missing = true
+get_missing_run_seconds = 300
+
+[unifi-1]
+url = unifi.domain.tld:8443
+username = ubnt
+password = ubnt
+site = default
+usg_name = MyRouter
+ssl = false
+verify_ssl = false
+get_usg_stats_run_seconds = 300

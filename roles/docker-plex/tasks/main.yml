@@ -1,0 +1,88 @@
+---
+  # DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns: 
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.plex.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ containers.plex.subdomain }}/"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+
+  # Check if GPU exists on host to pass to Plex Container
+- name: Check /dev/dri exists
+  stat:
+    path: '/dev/dri'
+  register: dev_dri
+
+  # Standup the container in inventory
+- name: Start Plex
+  docker_container:
+    name: "{{ containers.plex.subdomain }}"
+    hostname: "{{ containers.plex.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: plexinc/pms-docker
+    links: # Prevent container creation and startup until linked containers are running 
+      - "{{ containers.rclone.subdomain }}:{{ containers.rclone.subdomain }}"
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    mounts: 
+      - type: bind 
+        source: "{{ directories.container_root }}/{{ containers.plex.subdomain }}"
+        target: "{{ directories.config_dir }}"
+      - type: bind 
+        source: "{{ directories.data_dir }}"
+        target: "{{ directories.data_dir }}"
+    env:
+      PLEX_UID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PLEX_GID: "{{ users.primary.gid }}" # Pass proper GID to the container
+    devices: "{{ '/dev/dri:/dev/dri' if dev_dri.stat.exists == True | default(False) else omit }}" # Pass GPU to the container, if it exists
+    # Block Plex Spying
+    etc_hosts:
+      { 'analytics.plex.tv': '127.0.0.1', 'metrics.plex.tv': '127.0.0.1' }
+    # Pass required Plex ports to the host interface
+    ports:
+      - '32400:32400/tcp'
+      - '3005:3005/tcp'
+      - '8324:8324/tcp'
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.plex.subdomain }}"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.plex-rtr.entrypoints: "https"
+      traefik.http.routers.plex-rtr.rule: "Host(`{{ containers.plex.subdomain }}.{{ containers.plex.tld }}`)"
+      traefik.http.routers.plex-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.plex-rtr.service: "plex-svc"
+      traefik.http.services.plex-svc.loadbalancer.server.port: "{{ containers.plex.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.plex-rtr.middlewares: "chain-no-auth@file"
+...

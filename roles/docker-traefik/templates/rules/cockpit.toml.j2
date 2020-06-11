@@ -1,0 +1,15 @@
+[http.routers]
+  [http.routers.{{ containers.cockpit.subdomain }}-rtr]
+      entryPoints = ["https"]
+      rule = "Host(`{{ containers.cockpit.subdomain }}.{{ containers.cockpit.tld }}`)"
+      service = "{{ containers.cockpit.subdomain }}-svc"
+      middlewares = ["chain-oauth"]
+      [http.routers.{{ containers.cockpit.subdomain }}-rtr.tls]
+        certresolver = "cloudflare"
+
+[http.services]
+  [http.services.{{ containers.cockpit.subdomain }}-svc]
+    [http.services.{{ containers.cockpit.subdomain }}-svc.loadBalancer]
+      passHostHeader = true
+      [[http.services.{{ containers.cockpit.subdomain }}-svc.loadBalancer.servers]]
+        url = "https://{{ containers.cockpit.host }}:{{ containers.cockpit.port }}" # or whatever your external host's IP:port is

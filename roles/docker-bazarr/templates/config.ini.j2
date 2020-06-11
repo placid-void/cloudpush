@@ -1,0 +1,109 @@
+[assrt]
+token = 
+
+[sonarr]
+apikey = {{ api_keys.sonarr }}
+full_update = Daily
+ip = {{ containers.sonarr.subdomain }}
+only_monitored = False
+base_url = 
+ssl = False
+port = {{ containers.sonarr.port }}
+
+[radarr]
+apikey = {{ api_keys.radarr }}
+full_update = Daily
+ip = {{ containers.radarr.subdomain }}
+only_monitored = False
+base_url = 
+ssl = False
+port = {{ containers.radarr.port }}
+
+[anticaptcha]
+anti_captcha_key = 
+
+[auth]
+username = {{ bazarr.bazarr.username }}
+password = {{ bazarr.bazarr.password }}
+type = form
+
+[general]
+update_restart = True
+movie_default_hi = False
+minimum_score = 90
+ip = 0.0.0.0
+use_sonarr = True
+serie_default_language = ['en', 'ja']
+chmod = 0640
+path_mappings_movie = [['{{ directories.drive_root }}/{{ directories.movies }}', '{{ directories.drive_root }}/{{ directories.movies }}']]
+use_scenename = True
+use_mediainfo = True
+movie_default_forced = False
+subfolder_custom = 
+use_postprocessing = False
+enabled_providers = addic7ed,opensubtitles,podnapisi,subscene,subscenter,supersubtitles,tvsubtitles
+serie_default_enabled = True
+port = 6767
+ignore_pgs_subs = False
+movie_default_language = ['en', 'ja']
+days_to_upgrade_subs = 30
+movie_default_enabled = True
+use_radarr = True
+path_mappings = [['{{ directories.drive_root }}/{{ directories.tvshows }}', '{{ directories.drive_root }}/{{ directories.tvshows }}']]
+upgrade_subs = True
+subfolder = current
+base_url = /
+page_size = 25
+utf8_encode = True
+chmod_enabled = False
+auto_update = True
+throtteled_providers = {}
+upgrade_manual = False
+postprocessing_cmd = 
+minimum_score_movie = 70
+branch = master
+serie_default_hi = False
+debug = False
+anti_captcha_provider = None
+single_language = False
+multithreading = True
+use_embedded_subs = True
+adaptive_searching = True
+
+[addic7ed]
+username = {{ subtitle_provider.addic7ed.username }}
+password = {{ subtitle_provider.addic7ed.password }}
+random_agents = True
+
+[napisy24]
+username = 
+password = 
+
+[proxy]
+username = 
+url = 
+exclude = localhost,127.0.0.1
+password = 
+type = None
+port = 
+
+[xsubs]
+username = 
+password = 
+
+[legendastv]
+username = 
+password = 
+
+[opensubtitles]
+username = {{ subtitle_provider.opensubtitles.username }}
+use_tag_search = False
+skip_wrong_fps = False
+ssl = False
+vip = False
+timeout = 15
+password = {{ subtitle_provider.opensubtitles.password }}
+
+[deathbycaptcha]
+username = 
+password =

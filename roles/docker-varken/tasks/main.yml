@@ -1,0 +1,66 @@
+---
+  # DNS Record Creation for hostname of container
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ containers.varken.subdomain }}"
+    state: directory
+    setype: container_file_t
+    owner: "{{ users.grafana.user }}"
+    group: "{{ users.grafana.group }}"
+
+  # Verify templated required files with correct permissions are created
+- name: Adding varken.ini template file
+  template:
+    src: "templates/varken.ini.j2"
+    dest: "{{ directories.container_root }}/{{ containers.varken.subdomain }}/varken.ini"
+    owner: "{{ users.grafana.user }}"
+    group: "{{ users.grafana.group }}"
+    mode: 0660
+
+  # Standup the container in inventory
+- name: Start Varken
+  docker_container:
+    name: "{{ containers.varken.subdomain }}"
+    hostname: "{{ containers.varken.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: boerderij/varken
+    links: # Prevent container creation and startup until linked containers are running 
+    - "{{ containers.influxdb.subdomain }}:{{ containers.influxdb.subdomain }}"
+    - "{{ containers.lidarr.subdomain }}:{{ containers.lidarr.subdomain }}"
+    - "{{ containers.ombi.subdomain.0 }}:{{ containers.ombi.subdomain.0 }}"
+    - "{{ containers.ombi4k.subdomain.0 }}:{{ containers.ombi4k.subdomain.0 }}"
+    - "{{ containers.radarr.subdomain }}:{{ containers.radarr.subdomain }}"
+    - "{{ containers.radarr4k.subdomain }}:{{ containers.radarr4k.subdomain }}"
+    - "{{ containers.sonarr.subdomain }}:{{ containers.sonarr.subdomain }}"
+    - "{{ containers.sonarr4k.subdomain }}:{{ containers.sonarr4k.subdomain }}"
+    - "{{ containers.tautulli.subdomain }}:{{ containers.tautulli.subdomain }}"
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    mounts: 
+      - type: bind 
+        source: "{{ directories.container_root }}/{{ containers.varken.subdomain }}"
+        target: "{{ directories.config_dir }}"
+        # Mount InfluxDB to container for database connection
+      - type: bind 
+        source: "{{ directories.container_root }}/{{ containers.influxdb.subdomain }}"
+        target: /var/lib/influxdb 
+    # Varken user details
+    user: "{{ users.grafana.uid }}:{{ users.grafana.gid }}"
+    env:
+      PUID: "{{ users.grafana.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.grafana.gid }}" # Pass proper GID to the container
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.varken.subdomain }}"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+...

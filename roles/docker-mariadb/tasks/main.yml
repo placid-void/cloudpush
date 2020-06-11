@@ -1,0 +1,47 @@
+---
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ containers.mariadb.subdomain }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+
+  # Standup the container in inventory
+- name: Start MariaDB
+  docker_container:
+    name: "{{ containers.mariadb.subdomain }}"
+    hostname: "{{ containers.mariadb.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: linuxserver/mariadb
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    mounts: 
+      - type: bind 
+        source: "{{ directories.container_root }}/{{ containers.mariadb.subdomain }}"
+        target: "{{ directories.config_dir }}"
+      - type: bind 
+        source: "{{ directories.container_root }}/{{ containers.mariadb.subdomain }}/db"
+        target: /var/lib/mysql
+    ports:
+      - "{{ mariadb.login_port }}:{{ mariadb.login_port }}/tcp"
+    env:
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      MYSQL_ROOT_PASSWORD: "{{ mariadb.mariadb_passwd }}" # MariaDB Root Password
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.mariadb.subdomain }}"
+    purge_networks: yes
+    pull: true
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+...

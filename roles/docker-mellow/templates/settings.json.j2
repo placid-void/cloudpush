@@ -1,0 +1,60 @@
+{
+    "general": {
+        "username": "{{ mellow.username }}",
+        "password": "{{ mellow.password }}"
+    },
+    "bot": {
+        "token": "{{ mellow.bot.token }}",
+        "ownerid": "{{ mellow.bot.ownerid }}",
+        "commandprefix": "{{ mellow.bot.commandprefix }}",
+        "channelname": "{{ mellow.bot.channelname }}",
+        "deletecommandmessages": "true",
+        "unknowncommandresponse": "true",
+        "defaultservice": "{{ mellow.bot.defaultservice }}",
+        "requesttv": "{{ mellow.bot.requesttv }}",
+        "requestmovie": "{{ mellow.bot.requestmovie }}",
+        "admin": "{{ mellow.bot.admin }}",
+        "selection": "{{ mellow.bot.selection }}"
+    },
+    "ombi": {
+        "host": "http://{{ containers.ombi.subdomain.0 }}",
+        "port": "{{ containers.ombi.port }}",
+        "baseurl": "",
+        "apikey": "{{ api_keys.ombi }}",
+        "ssl": "false",
+        "username": ""
+    },
+    "tautulli": {
+        "host": "http://{{ containers.tautulli.subdomain }}",
+        "port": "{{ containers.tautulli.port }}",
+        "baseurl": "",
+        "apikey": "{{ api_keys.tautulli }}",
+        "ssl": "false"
+    },
+    "sonarr": {
+        "host": "http://{{ containers.sonarr.subdomain }}",
+        "port": "{{ containers.sonarr.port }}",
+        "baseurl": "",
+        "apikey": "{{ api_keys.sonarr }}",
+        "ssl": "false",
+        "profile": "1",
+        "profileanime": "1",
+        "rootfolder": "{{ directories.drive_root }}/{{ directories.tvshows }}",
+        "rootfolderanime": "{{ directories.drive_root }}/{{ directories.tvshows }}",
+        "languageprofile": "0",
+        "seasonfolders": "true",
+        "v3": "true",
+        "searchonrequest": "true"
+    },
+    "radarr": {
+        "host": "http://{{ containers.radarr.subdomain }}",
+        "port": "{{ containers.radarr.port }}",
+        "baseurl": "",
+        "apikey": "{{ api_keys.radarr }}",
+        "ssl": "false",
+        "profile": "1",
+        "rootfolder": "{{ directories.drive_root }}/{{ directories.movies }}",
+        "minimumavailability": "Announced",
+        "searchonrequest": "true"
+    }
+}

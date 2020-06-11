@@ -1,0 +1,14 @@
+{
+    "client_id": "{{ duplicacy.client_id }}",
+    "end_point": {
+        "AuthURL": "",
+        "TokenURL": "https://duplicacy.com/gcd_refresh",
+        "AuthStyle": 0
+    },
+    "token": {
+        "access_token": "{{ duplicacy.access_token }}",
+        "token_type": "Bearer",
+        "refresh_token": "{{ duplicacy.refresh_token }}",
+        "expiry": "{{ duplicacy.expiry }}"
+    }
+}

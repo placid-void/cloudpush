@@ -1,0 +1,53 @@
+---
+# Database Creation
+  - name: add bookstack db
+    mysql_db:
+      name: 
+        - "{{ containers.bookstack.subdomain }}"
+        - "{{ containers.grafana.subdomain }}"
+        - "{{ containers.nextcloud.subdomain }}"
+      login_host: "localhost"
+      login_port: "{{ mariadb.login_port }}"
+      login_user: "{{ mariadb.login_user }}"
+      login_password: "{{ mariadb.mariadb_passwd }}"
+      state: present
+
+# Bookstack User
+  - name: add bookstack user
+    mysql_user:
+      name: "{{ containers.bookstack.subdomain }}"
+      password: "{{ mariadb.bookstack_passwd }}"
+      host: "{{ containers.bookstack.subdomain }}.{{ networks.docker.primary.name }}"
+      priv: "{{ containers.bookstack.subdomain }}.*:ALL"
+      login_host: "localhost"
+      login_port: "{{ mariadb.login_port }}"
+      login_user: "{{ mariadb.login_user }}"
+      login_password: "{{ mariadb.mariadb_passwd }}"
+      state: present
+
+# Grafana User
+  - name: add grafana user
+    mysql_user:
+      name: "{{ containers.grafana.subdomain }}"
+      password: "{{ mariadb.grafana_passwd }}"
+      host: "{{ containers.grafana.subdomain }}.{{ networks.docker.primary.name }}"
+      priv: "{{ containers.grafana.subdomain }}.*:ALL"
+      login_host: "localhost"
+      login_port: "{{ mariadb.login_port }}"
+      login_user: "{{ mariadb.login_user }}"
+      login_password: "{{ mariadb.mariadb_passwd }}"
+      state: present
+
+# NextCloud User
+  - name: add nextcloud user
+    mysql_user:
+      name: "{{ containers.nextcloud.subdomain }}"
+      password: "{{ mariadb.nextcloud_passwd }}"
+      host: "{{ containers.nextcloud.subdomain }}.{{ networks.docker.primary.name }}"
+      priv: "{{ containers.nextcloud.subdomain }}.*:ALL"
+      login_host: "localhost"
+      login_port: "{{ mariadb.login_port }}"
+      login_user: "{{ mariadb.login_user }}"
+      login_password: "{{ mariadb.mariadb_passwd }}"
+      state: present
+...

@@ -1,0 +1,36 @@
+---
+  # Standup the container in inventory
+- name: Start Docker-GC
+  docker_container:
+    name: "{{ containers.gc.subdomain }}"
+    hostname: "{{ containers.gc.subdomain }}"
+    state: started
+    privileged: yes
+    restart_policy: unless-stopped
+    image: spotify/docker-gc
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    mounts: 
+      - type: bind 
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+      - type: bind 
+        source: /etc
+        target: /etc
+    env:
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      REMOVE_VOLUMES: "1" # Should GC Remove abandoned volumes?
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.gc.subdomain }}"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+...

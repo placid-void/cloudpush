@@ -1,0 +1,85 @@
+---
+  # DNS Record Creation for player of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns: 
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.synclounge.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+  
+  # DNS Record Creation for server of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns: 
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.synclounge_server.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # Standup the container in inventory
+- name: Start Synclounge
+  docker_container:
+    name: "{{ containers.synclounge.subdomain }}"
+    hostname: "{{ containers.synclounge.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: starbix/synclounge
+    links: # Prevent container creation and startup until linked containers are running 
+    - "{{ containers.plex.subdomain }}:{{ containers.plex.subdomain }}"
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    env:
+      autoJoin: "{{ synclounge.autojoin }}" # Should Synclounge join Synclounge Server automatically?
+      autoJoinRoom: "{{ synclounge.autojoinroom }}" # Should Synclounge join Synclounge Server room automatically?
+      autoJoinServer: "https://{{ containers.synclounge_server.subdomain }}.{{ containers.synclounge_server.tld }}/slserver" # Synclounge Server to auto join
+      accessUrl: "{{ containers.synclounge.subdomain }}.{{ containers.synclounge.tld }}" # Synclouge access URL
+      DOMAIN: "{{ containers.synclounge.subdomain }}.{{ containers.synclounge.tld }}" # Domain
+      PGID: "{{ users.primary.gid }}" # Pass proper UID to the container
+      PUID: "{{ users.primary.uid }}" # Pass proper GID to the container
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.synclounge.subdomain }}"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers - Lobby
+      traefik.http.routers.synclounge-rtr.entrypoints: "https"
+      traefik.http.routers.synclounge-rtr.rule: "Host(`{{ containers.synclounge.subdomain }}.{{ containers.synclounge.tld }}`)"
+      traefik.http.routers.synclounge-rtr.tls: "true"
+      ## HTTP Services - Lobby
+      traefik.http.routers.synclounge-rtr.service: "synclounge-svc"
+      traefik.http.services.synclounge-svc.loadbalancer.server.port: "{{ containers.synclounge.port | default('80') }}"
+      ## Middlewares - Lobby
+      traefik.http.routers.synclounge-rtr.middlewares: "chain-no-auth@file"
+      ## HTTP Routers - Server
+      traefik.http.routers.synclounge_server-rtr.entrypoints: "https"
+      traefik.http.routers.synclounge_server-rtr.rule: "Host(`{{ containers.synclounge_server.subdomain }}.{{ containers.synclounge_server.tld }}`)"
+      traefik.http.routers.synclounge_server-rtr.tls: "true"
+      ## HTTP Services - Server
+      traefik.http.routers.synclounge_server-rtr.service: "synclounge_server-svc"
+      traefik.http.services.synclounge_server-svc.loadbalancer.server.port: "{{ containers.synclounge_server.port | default('80') }}"
+      ## Middlewares - Server
+      traefik.http.routers.synclounge_server-rtr.middlewares: "chain-no-auth@file"
+...

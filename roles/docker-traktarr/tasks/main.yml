@@ -1,0 +1,60 @@
+---
+    # Verify required directories with correct permissions are created
+  - name: check dir ownership
+    file:
+      recurse: yes
+      path: "{{ directories.container_root }}/{{ containers.traktarr.subdomain }}"
+      owner: "{{ users.primary.user }}"
+      group: "{{ users.primary.group }}"
+      state: directory
+      setype: container_file_t
+
+    # Verify templated required files with correct permissions are created
+  - name: copy config.json template to host
+    template:
+      src: "templates/config.json.j2"
+      dest: "{{ directories.container_root }}/{{ containers.traktarr.subdomain }}/config.json"
+      owner: "{{ users.primary.user }}"
+      group: "{{ users.primary.group }}"
+      mode: 0640
+
+    # Standup the container in inventory
+  - name: Start Traktarr
+    docker_container:
+      name: "{{ containers.traktarr.subdomain }}"
+      hostname: "{{ containers.traktarr.subdomain }}"
+      state: started
+      restart_policy: unless-stopped
+      image: eafxx/traktarr
+      links: # Prevent container creation and startup until linked containers are running 
+      - "{{ containers.radarr.subdomain }}:{{ containers.radarr.subdomain }}"
+      - "{{ containers.sonarr.subdomain }}:{{ containers.sonarr.subdomain }}"
+      log_driver: "json-file"
+      log_options:
+        max-size: "12m"
+        max-file: "3"
+      # Mount required directories with the container
+      mounts: 
+        - type: bind 
+          source: "{{ directories.container_root }}/{{ containers.traktarr.subdomain }}"
+          target: "{{ directories.config_dir }}"
+      env:
+        PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+        PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+        SORT: "rating" # How to sort results
+        NOSEARCH: "no" # Should *arr search for item on add
+        NOTIFICATIONS: "no" # Send notifications
+        BLACKLIST: "yes" # Enable blacklist
+        RUNNOW: "yes" # Run on container startup
+        SKIPUPDATE: "no"
+        APP_BRANCH: "master"
+      networks_cli_compatible: no
+      networks:
+        - name: "{{ networks.docker.primary.name }}"
+          aliases: "{{ containers.traktarr.subdomain }}"
+      purge_networks: yes
+      pull: true 
+      labels:
+        ## Watchtower Updates
+        com.centurylinklabs.watchtower.enable: "true"
+...

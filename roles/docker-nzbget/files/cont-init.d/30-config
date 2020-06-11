@@ -1,0 +1,19 @@
+#!/usr/bin/with-contenv bash
+
+# delete lock file if found
+[[ -f {{ directories.download_dir }}/nzbget.lock ]] && \
+	rm {{ directories.download_dir }}/nzbget.lock
+
+# check if config file exists in {{ directories.config_dir }}
+[[ ! -f {{ directories.config_dir }}/nzbget.conf ]] && \
+	cp /defaults/nzbget.conf {{ directories.config_dir }}/nzbget.conf
+
+# create tmp and nzb folders
+	mkdir /tmp
+	mkdir {{ directories.data_dir }}/nzb
+
+# symlink mnt and data dirs until queue is empty
+	rm -r /mnt
+	ln -s {{ directories.data_dir }} /mnt
+
+exec {{ directories.config_dir }}/installer/installer.sh

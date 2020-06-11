@@ -1,0 +1,152 @@
+---
+  # DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns: 
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.rclone.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}2"
+    - "{{ directories.download_dir }}"
+    - "{{ directories.incomplete_dir }}"
+    - "{{ directories.data_dir }}/{{ directories.cache_dir }}"
+    - "{{ directories.data_dir }}/{{ directories.cache_db_dir }}"
+
+  # Verify templated required files with correct permissions are created
+- name: Adding Required Files
+  template:
+    src: "templates/{{ item }}.j2"
+    dest: "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0660
+  loop:
+    - "fuse.conf"
+    - "rclone.conf"
+
+  # Verify mount point bind is not currently mounted
+- name: Verify mount point is unmounted
+  command: 
+    cmd: "umount -l {{ directories.data_dir }}/{{ directories.media_dir }}"
+
+  # Standup the container in inventory
+- name: Start RClone
+  docker_container:
+    name: "{{ containers.rclone.subdomain }}"
+    hostname: "{{ containers.rclone.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: rclone/rclone:latest
+    # Mount required directories with the container
+    mounts: 
+      - type: bind 
+        source: "{{ directories.container_root }}/{{ containers.rclone.subdomain }}"
+        target: "{{ directories.config_dir }}/rclone"
+      - type: bind 
+        source: "{{ directories.data_dir }}"
+        target: "{{ directories.data_dir }}"
+        propagation: slave
+      - type: bind
+        source: "{{ directories.data_dir }}/{{ directories.media_dir }}"
+        target: "{{ directories.drive_root }}"
+        propagation: shared
+        # Force "allow_other" option for FUSE
+      - type: bind 
+        source: "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/fuse.conf"
+        target: /etc/fuse.conf 
+        # Required for FUSE to work correctly
+      - type: bind 
+        read_only: yes 
+        source: /etc/passwd 
+        target: /etc/passwd 
+        # Required for FUSE to work correctly
+      - type: bind 
+        read_only: yes 
+        source: /etc/group 
+        target: /etc/group 
+    # Required capabilities for container to function properly
+    capabilities: 
+      - "MKNOD"
+      - "SYS_ADMIN"
+    # Startup command with options to mount Rclone
+    command: "mount {{ mount_options.drive }}:/Media {{ directories.drive_root }} --allow-other --allow-non-empty --dir-cache-time={{ mount_options.dir_cache_time }} --drive-chunk-size={{ mount_options.drive_chunk_size }} --stats={{ mount_options.stats }} --stats-log-level={{ mount_options.stats_log_level }} --umask {{ mount_options.umask }} --log-level={{ mount_options.log_level }} --vfs-read-chunk-size-limit={{ mount_options.vfs_read_chunk_size_limit }} --vfs-cache-mode={{ mount_options.vfs_cache_mode }} --vfs-cache-max-age={{ mount_options.vfs_cache_max_age }} --vfs-cache-max-size {{ mount_options.max_size }} --user-agent={{ mount_options.user_agent }} --cache-dir={{ directories.data_dir }}/{{ directories.cache }} --cache-writes --cache-db-path={{ mount_options.cache_settings.db_path }} --exclude *.partial~ --rc --rc-pass {{ mount_options.rc_pass }} --rc-serve --rc-user {{ mount_options.rc_user }} --rc-web-gui --rc-web-gui-no-open-browser"
+    # Pass FUSE to the container
+    devices: "/dev/fuse"
+    env:
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      # RCLONE_ALLOW_NON_EMPTY: "{{ mount_options.allow_non_empty }}"
+      # RCLONE_ALLOW_OTHER: "{{ mount_options.allow_other }}"
+      # RCLONE_CACHE_DB_PATH: "{{ mount_options.cache_settings.db_path }}"
+      # RCLONE_CACHE_DB_PURGE: "{{ mount_options.cache_settings.db_purge }}"
+      # RCLONE_CACHE_DIR: "{{ mount_options.cache_settings.tmp_upload_path }}"
+      # RCLONE_CACHE_TMP_UPLOAD_PATH: "{{ mount_options.cache_settings.tmp_upload_path }}"
+      # RCLONE_CACHE_TMP_WAIT_TIME: "{{ mount_options.cache_settings.tmp_wait_time }}"
+      # RCLONE_CACHE_WORKERS: "{{ mount_options.cache_settings.cache_workers }}"
+      # RCLONE_CACHE_WRITES: "{{ mount_options.cache_settings.cache_writes }}"
+      # RCLONE_CONFIG_DRIVE_CLIENT_ID: "{{ rclone.client_id }}"
+      # RCLONE_CONFIG_DRIVE_CLIENT_SECRET: "{{ rclone.client_secret }}"
+      # RCLONE_CONFIG_DRIVE_ROOT_FOLDER_ID: "{{ rclone.root_folder_id }}"
+      # RCLONE_CONFIG_DRIVE_TYPE: "drive"
+      # RCLONE_DIR_CACHE_TIME: "{{ mount_options.dir_cache_time }}"
+      # RCLONE_DRIVE_CHUNK_SIZE: "{{ mount_options.drive_chunk_size }}"
+      # RCLONE_EXCLUDE: "{{ mount_options.cache_settings.exclude }}"
+      # RCLONE_LOG_LEVEL: "{{ mount_options.log_level }}"
+      # RCLONE_RC: "{{ mount_options.rc }}"
+      # RCLONE_RC_PASS: "{{ mount_options.rc_pass }}"
+      # RCLONE_RC_SERVE: "{{ mount_options.rc_serve }}"
+      # RCLONE_RC_USER: "{{ mount_options.rc_user }}"
+      # RCLONE_RC_WEB_GUI: "{{ mount_options.rc_web_gui }}"
+      # RCLONE_RC_WEB_GUI_NO_OPEN_BROWSER: "{{ mount_options.rc_web_gui_no_open_browser }}"
+      # RCLONE_STATS: "{{ mount_options.stats }}"
+      # RCLONE_STATS_LOG_LEVEL: "{{ mount_options.stats_log_level }}"
+      # RCLONE_USER_AGENT: "{{ mount_options.user_agent }}"
+      # RCLONE_UMASK: "{{ mount_options.umask }}"
+      # RCLONE_VFS_CACHE_MAX_AGE: "{{ mount_options.vfs_cache_max_age }}"
+      # RCLONE_VFS_CACHE_MAX_SIZE: "{{ mount_options.max_size }}"
+      # RCLONE_VFS_CACHE_MODE: "{{ mount_options.vfs_cache_mode }}"
+      # RCLONE_VFS_READ_CHUNK_SIZE: "{{ mount_options.vfs_read_chunk_size_limit }}"
+    # Required security options for  container to function properly
+    security_opts: "apparmor:unconfined"
+    # Rclone user details
+    user: "{{ users.primary.uid }}:{{ users.primary.gid }}"
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.rclone.subdomain }}"
+    purge_networks: yes
+    pull: true
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      # Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.rclone-rtr.entrypoints: "https"
+      traefik.http.routers.rclone-rtr.rule: "Host(`{{ containers.rclone.subdomain }}.{{ containers.rclone.tld }}`)"
+      traefik.http.routers.rclone-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.rclone-rtr.service: "rclone-svc"
+      traefik.http.services.rclone-svc.loadbalancer.server.port: "{{ containers.rclone.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.rclone-rtr.middlewares: "chain-oauth@file"
+...

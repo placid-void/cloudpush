@@ -1,0 +1,98 @@
+---
+  # DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns: 
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.nextcloud.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "{{ containers.nextcloud.subdomain }}"
+    - "{{ containers.nextcloud.subdomain }}/config"
+    - "{{ containers.nextcloud.subdomain }}/data"
+
+  # Verify templated required files with correct permissions are created
+- name: copy config.php template to host
+  template:
+    src: "templates/config.php.j2"
+    dest: "{{ directories.container_root }}/{{ containers.nextcloud.subdomain }}/data/config.php"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0640
+
+  # Standup the container in inventory
+- name: Start NextCloud
+  docker_container:
+    name: "{{ containers.nextcloud.subdomain }}"
+    hostname: "{{ containers.nextcloud.subdomain }}.{{ containers.nextcloud.tld }}"
+    state: started
+    restart_policy: unless-stopped
+    image: nextcloud
+    links: # Prevent container creation and startup until linked containers are running 
+      - "{{ containers.mariadb.subdomain }}:{{ containers.mariadb.subdomain }}"
+      - "{{ containers.rclone.subdomain }}:{{ containers.rclone.subdomain }}"
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    mounts: 
+      - type: bind 
+        source: "{{ directories.container_root }}/{{ containers.nextcloud.subdomain }}"
+        target: /var/www/html
+      - type: bind 
+        source: "{{ directories.data_dir }}"
+        target: "{{ directories.data_dir }}"
+    # Nextcloud user details
+    user: "{{ users.primary.uid }}:{{ users.primary.gid }}"
+    env:
+      MYSQL_PASSWORD: "{{ mariadb.nextcloud_db_passwd }}" # MariaDB Password
+      MYSQL_DATABASE: "{{ containers.nextcloud.subdomain }}" # Nextcloud Database
+      MYSQL_USER: "{{ containers.nextcloud.subdomain }}" # MariaDB User
+      MYSQL_HOST: "{{ containers.mariadb.subdomain }}:{{ containers.mariadb.port }}" # MariaDB Port
+      NEXTCLOUD_ADMIN_USER: "{{ mariadb.nextcloud_admin_user }}" # Nextcloud Administrator Username
+      NEXTCLOUD_ADMIN_PASSWORD: "{{ mariadb.nextcloud_admin_passwd }}" # Nextcloud Administrator Password
+      NEXTCLOUD_HOSTNAME: "{{ containers.nextcloud.subdomain }}.{{ containers.nextcloud.tld }}" # Nextcloud Hostname
+      NEXTCLOUD_TRUSTED_DOMAINS: "{{ domain }}" # Domains Nextcloud will Trust
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+    sysctls: "net.ipv4.ip_unprivileged_port_start=0"
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.nextcloud.subdomain }}"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.nextcloud-rtr.entrypoints: "https"
+      traefik.http.routers.nextcloud-rtr.rule: "Host(`{{ containers.nextcloud.subdomain }}.{{ containers.nextcloud.tld }}`)"
+      traefik.http.routers.nextcloud-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.nextcloud-rtr.service: "nextcloud-svc"
+      traefik.http.services.nextcloud-svc.loadbalancer.server.port: "{{ containers.nextcloud.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.nextcloud-rtr.middlewares: "chain-no-auth@file"
+...

@@ -1,0 +1,87 @@
+---
+# DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns: 
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.ombi4k.subdomain.0 }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # DNS Record Creation for public alias of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns: 
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.ombi4k.subdomain.1 }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ containers.ombi4k.subdomain.0 }}/"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+
+  # Standup the container in inventory
+- name: Start Ombi4K
+  docker_container:
+    name: "{{ containers.ombi4k.subdomain.0 }}"
+    hostname: "{{ containers.ombi4k.subdomain.0 }}"
+    state: started
+    restart_policy: unless-stopped
+    image: linuxserver/ombi
+    links: # Prevent container creation and startup until linked containers are running 
+    - "{{ containers.radarr4k.subdomain }}:{{ containers.radarr4k.subdomain }}"
+    - "{{ containers.sonarr4k.subdomain }}:{{ containers.sonarr4k.subdomain }}"
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    mounts: 
+      - type: bind 
+        source: "{{ directories.container_root }}/{{ containers.ombi4k.subdomain.0 }}"
+        target: "{{ directories.config_dir }}"
+    env:
+      PUID: "{{ users.primary.uid }}"
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}" # Pass proper UID to the container
+        aliases: "{{ containers.ombi4k.subdomain.0 }}"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.ombi4k-rtr.entrypoints: "https"
+      traefik.http.routers.ombi4k-rtr.rule: "Host(`{{ containers.ombi4k.subdomain.0 }}.{{ containers.ombi4k.tld }}`, `{{ containers.ombi4k.subdomain.1}}.{{ containers.ombi4k.tld }}`)"
+      traefik.http.routers.ombi4k-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.ombi4k-rtr.service: "ombi4k-svc"
+      traefik.http.services.ombi4k-svc.loadbalancer.server.port: "{{ containers.ombi4k.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.ombi4k-rtr.middlewares: "chain-no-auth@file"
+...
