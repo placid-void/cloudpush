@@ -1,4 +1,6 @@
+.editorconfig
 .git
+.gitignore
 .VSCodeCounter/
 ansible.cfg
 inventory
