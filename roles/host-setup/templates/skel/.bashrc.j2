@@ -182,7 +182,7 @@ alias superrm='rm **/*.cue **/*.jpg **/*.jpeg **/*.htm **/*.html **/*.m3u **/*.t
 #delete empty directories
 alias superfind='find -empty -type d -delete'
 #tail Drive Log
-alias drive='docker logs -f -t 10 {{ containers.rclone.subdomain }}'
+alias drive='docker logs -f --tail 10 {{ containers.rclone.subdomain }}'
 #fix plex db
 alias plexdb='sqlite3 {{ directories.container_root }}/{{ containers.plex.subdomain }}/Library/Application\ Support/Plex\ Media\ Server/Plug-in\ Support/Databases/com.plexapp.plugins.library.db "UPDATE metadata_items set deleted_at=null"'
 
