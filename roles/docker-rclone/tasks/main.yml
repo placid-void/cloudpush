@@ -88,7 +88,7 @@
       - "MKNOD"
       - "SYS_ADMIN"
     # Startup command with options to mount Rclone
-    command: "mount {{ mount_options.drive }}:/Media {{ directories.drive_root }} --allow-other --allow-non-empty --dir-cache-time={{ mount_options.dir_cache_time }} --drive-chunk-size={{ mount_options.drive_chunk_size }} --stats={{ mount_options.stats }} --stats-log-level={{ mount_options.stats_log_level }} --umask {{ mount_options.umask }} --log-level={{ mount_options.log_level }} --vfs-read-chunk-size-limit={{ mount_options.vfs_read_chunk_size_limit }} --vfs-cache-mode={{ mount_options.vfs_cache_mode }} --vfs-cache-max-age={{ mount_options.vfs_cache_max_age }} --vfs-cache-max-size {{ mount_options.max_size }} --user-agent={{ mount_options.user_agent }} --cache-dir={{ directories.data_dir }}/{{ directories.cache }} --cache-writes --cache-db-path={{ mount_options.cache_settings.db_path }} --exclude *.partial~ --rc --rc-pass {{ mount_options.rc_pass }} --rc-serve --rc-user {{ mount_options.rc_user }} --rc-web-gui --rc-web-gui-no-open-browser"
+    command: "mount {{ mount_options.drive }}:/Media {{ directories.drive_root }} --allow-other --allow-non-empty --fast-list --dir-cache-time={{ mount_options.dir_cache_time }} --drive-chunk-size={{ mount_options.drive_chunk_size }} --stats={{ mount_options.stats }} --stats-log-level={{ mount_options.stats_log_level }} --umask {{ mount_options.umask }} --log-level={{ mount_options.log_level }} --vfs-read-chunk-size-limit={{ mount_options.vfs_read_chunk_size_limit }} --vfs-cache-mode={{ mount_options.vfs_cache_mode }} --vfs-cache-max-age={{ mount_options.vfs_cache_max_age }} --vfs-cache-max-size {{ mount_options.max_size }} --user-agent={{ mount_options.user_agent }} --cache-dir={{ directories.data_dir }}/{{ directories.cache }} --cache-writes --cache-db-path={{ mount_options.cache_settings.db_path }} --exclude *.partial~ --rc --rc-pass {{ mount_options.rc_pass }} --rc-serve --rc-user {{ mount_options.rc_user }} --rc-web-gui --rc-web-gui-no-open-browser"
     # Pass FUSE to the container
     devices: "/dev/fuse"
     env:
@@ -110,6 +110,7 @@
       # RCLONE_DIR_CACHE_TIME: "{{ mount_options.dir_cache_time }}"
       # RCLONE_DRIVE_CHUNK_SIZE: "{{ mount_options.drive_chunk_size }}"
       # RCLONE_EXCLUDE: "{{ mount_options.cache_settings.exclude }}"
+      # RCLONE_FAST_LIST: "{{ mount_options.fast_list }}"
       # RCLONE_LOG_LEVEL: "{{ mount_options.log_level }}"
       # RCLONE_RC: "{{ mount_options.rc }}"
       # RCLONE_RC_PASS: "{{ mount_options.rc_pass }}"
