@@ -53,8 +53,8 @@
       - type: bind 
         source: "{{ directories.container_root }}/{{ containers.goautoyt.subdomain }}"
         target: /app/config
-      - type: bind 
-        source: "{{ directories.data_dir }}/media/Youtube"
+      - type: volume # Mount shared data volume
+        source: "{{ directories.data_vol }}:/media/Youtube"
         target: /app/downloads
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container

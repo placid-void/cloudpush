@@ -36,6 +36,7 @@
   # - docker-sonarr
   # - docker-sonarr4k
   # - docker-syncarr-radarr
+  # - docker-syncarr-sonarr
   # - docker-bazarr
   # - docker-bazarr4k
   # - docker-plex
@@ -48,12 +49,11 @@
   # - docker-traktarr
   # - docker-grafana
   # - docker-varken
+  # - docker-emby
+  # - docker-jellyfin
 
   # Not implemented fully yet
-  # - docker-emby
   # - docker-elk
-  # - docker-jellyfin
   # - docker-prometheus
   # - docker-readarr
-  # - docker-syncarr-sonarr
 ...

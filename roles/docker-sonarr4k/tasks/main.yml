@@ -44,8 +44,8 @@
       - type: bind 
         source: "{{ directories.container_root }}/{{ containers.sonarr4k.subdomain }}"
         target: "{{ directories.config_dir }}"
-      - type: bind 
-        source: "{{ directories.data_dir }}"
+      - type: volume # Mount shared data volume
+        source: "{{ directories.data_vol }}"
         target: "{{ directories.data_dir }}"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container

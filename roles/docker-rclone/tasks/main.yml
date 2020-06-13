@@ -66,23 +66,23 @@
         target: "{{ directories.data_dir }}"
         propagation: slave
       - type: bind
-        source: "{{ directories.data_dir }}/{{ directories.media_dir }}"
+        source: "{{ directories.drive_root }}"
         target: "{{ directories.drive_root }}"
         propagation: shared
-        # Force "allow_other" option for FUSE
-      - type: bind 
+      - type: bind # Force "allow_other" option for FUSE
         source: "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/fuse.conf"
         target: /etc/fuse.conf 
-        # Required for FUSE to work correctly
-      - type: bind 
+      - type: bind # Required for FUSE to work correctly
         read_only: yes 
         source: /etc/passwd 
         target: /etc/passwd 
-        # Required for FUSE to work correctly
-      - type: bind 
+      - type: bind # Required for FUSE to work correctly
         read_only: yes 
         source: /etc/group 
         target: /etc/group 
+      - type: volume # Create docker volume for other containers to use
+        target: "{{ directories.data_dir }}"
+        volume_name: "{{ directories.data_vol }}"
     # Required capabilities for container to function properly
     capabilities: 
       - "MKNOD"
