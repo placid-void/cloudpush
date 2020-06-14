@@ -422,8 +422,10 @@ rclone:
 # Duplicacy specific vars
 duplicacy:
   access_token: "{{ lookup('lastpass', '****/Duplicacy', field='access_token') }}"
+  administration_token: "{{ lookup('lastpass', '****/Johnflix Duplicacy', field='administration_token') }}"
   client_id: "{{ lookup('lastpass', '****/Duplicacy', field='client_id') }}"
   email_password: "{{ lookup('lastpass', '****/Duplicacy', field='email_password') }}"
+  email_password_hash: "{{ lookup('lastpass', '****/Duplicacy', field='email_password_hash') }}"
   encryption_data: "{{ lookup('lastpass', '****/Duplicacy', field='encryption_data') }}"
   expiry: "{{ lookup('lastpass', '****/Duplicacy', field='expiry') }}"
   gcd_token: "{{ lookup('lastpass', '****/Duplicacy', field='gcd_token') }}"
