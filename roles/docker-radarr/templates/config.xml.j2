@@ -1,0 +1,16 @@
+<Config>
+  <LogLevel>Info</LogLevel>
+  <Port>{{ containers.radarr.port }}</Port>
+  <UrlBase></UrlBase>
+  <BindAddress>*</BindAddress>
+  <SslPort>6868</SslPort>
+  <EnableSsl>False</EnableSsl>
+  <ApiKey>{{ api_keys.radarr }}</ApiKey>
+  <AuthenticationMethod>Forms</AuthenticationMethod>
+  <Branch>develop</Branch>
+  <LaunchBrowser>False</LaunchBrowser>
+  <SslCertHash></SslCertHash>
+  <UpdateMechanism>BuiltIn</UpdateMechanism>
+  <UpdateAutomatically>False</UpdateAutomatically>
+  <AnalyticsEnabled>False</AnalyticsEnabled>
+</Config>

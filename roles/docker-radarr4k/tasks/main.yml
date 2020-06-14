@@ -25,6 +25,15 @@
     state: directory
     setype: container_file_t
 
+  # Verify templated required files with correct permissions are created
+- name: Adding Required Files
+  template:
+    src: "templates/config.xml.j2"
+    dest: "{{ directories.container_root }}/{{ containers.radarr4k.subdomain }}/config.xml"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0660
+
   # Standup the container in inventory
 - name: Start Radarr 4K
   docker_container:
@@ -44,8 +53,8 @@
       - type: bind 
         source: "{{ directories.container_root }}/{{ containers.radarr4k.subdomain }}"
         target: "{{ directories.config_dir }}"
-      - type: volume # Mount shared data volume
-        source: "{{ directories.data_vol }}"
+      - type: bind
+        source: "{{ directories.data_dir }}"
         target: "{{ directories.data_dir }}"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
