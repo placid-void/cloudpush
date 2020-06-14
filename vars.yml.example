@@ -397,14 +397,12 @@ mount_options:
   vfs_cache_max_age: 3h
   vfs_cache_mode: writes
   vfs_read_chunk_size_limit: "off"
-  verbose_level: "v"
   cache_settings: 
     chunk_clean_interval: "5m0s"
     chunk_size: "64M"
     chunk_total_size: "50G"
     cache_workers: "6"
     cache_writes: "true"
-    db_path: "/data/cache-db/"
     db_purge: "false"
     exclude: "**.partial~"
     info_age: "36h"
@@ -434,9 +432,11 @@ duplicacy:
   machine_id: "{{ lookup('lastpass', '****/Duplicacy', field='machine_id') }}"
   refresh_token: "{{ lookup('lastpass', '****/Duplicacy', field='refresh_token') }}"
   signature: "{{ lookup('lastpass', '****/Duplicacy', field='signature') }}"
+  dark_mode: "true" # Dark mode on web interface; true or false
   id: "gd_" # Duplicacy backups ID
   name: "G_Drive" # Remote storage name
-  options: "-stats -threads 5" # Options to be applied to all configured tasks
+  options: "-stats -threads 5" # Options to be applied to all configured backup and check tasks
+  prune_options: "-exclusive -stats -threads 5" # Options to be applied to all configured prune tasks
   keep_options: "-keep 0:365 -keep 30:180 -keep 1:7" # Keep options for backups
   global_options: "-v" # Global options
   backup_name: "Appdata Backup" # Name of the backup task
@@ -491,7 +491,7 @@ nzbget:
     password: "{{ lookup('lastpass', '****/NZBGet', field='password') }}" # Password for the account
     port: "{{ lookup('lastpass', 'IT Services/****', field='port') }}" # Port to connect to the News Server
     retention: "{{ lookup('lastpass', 'IT Services/****', field='retention') }}" # Retention in days of the news server
-    username: "{{ lookup('lastpass', '****/NZBGet', field='username') }}" # Username for the account
+    username: "{{ lookup('lastpass', 'IT Services/****', field='username') }}" # Username for the account
   daemon:
     ip: "0.0.0.0" # IP NZBGet should listen for connections
     port: "{{ containers.nzbget.port }}" # Port NZBGet should listen for connections
