@@ -1,0 +1,16 @@
+<Config>
+  <LogLevel>info</LogLevel>
+  <Port>{{ containers.sonarr.port }}</Port>
+  <UrlBase></UrlBase>
+  <BindAddress>*</BindAddress>
+  <SslPort>6868</SslPort>
+  <EnableSsl>False</EnableSsl>
+  <ApiKey>{{ api_keys.sonarr }}</ApiKey>
+  <AuthenticationMethod>Forms</AuthenticationMethod>
+  <Branch>master</Branch>
+  <LaunchBrowser>False</LaunchBrowser>
+  <SslCertHash></SslCertHash>
+  <UpdateMechanism>BuiltIn</UpdateMechanism>
+  <UpdateAutomatically>False</UpdateAutomatically>
+  <AnalyticsEnabled>False</AnalyticsEnabled>
+</Config>
