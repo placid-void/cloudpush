@@ -11,7 +11,7 @@
     ],
     "computers": [
         {
-            "name": "{{ containers.host.subdomain }}",
+            "name": "{{ containers.duplicacy.subdomain }}",
             "repositories": [
                 {
                     "index": 0,
@@ -27,14 +27,14 @@
                     "job_log": "",
                     "job_code": "",
                     "job_note": "",
-                    "job_time": ""
+                    "job_time": "0001-01-01T00:00:00Z"
                 }
             ]
         }
     ],
     "schedules": [
         {
-            "email_password": "{{ duplicacy.email_password }}",
+            "email_password": "{{ duplicacy.email_password_hash }}",
             "name": "{{ duplicacy.backup_name }}",
             "start": "{{ duplicacy.start_time }}",
             "max": "{{ duplicacy.max_run_time }}",
@@ -43,45 +43,45 @@
             "jobs": [
                 {
                     "type": "backup",
-                    "computer": "{{ containers.host.subdomain }}",
+                    "computer": "{{ containers.duplicacy.subdomain }}",
                     "repository": 0,
                     "source": "{{ directories.container_root }}",
-                    "storage": "{{ directories.name }}",
+                    "storage": "{{ duplicacy.name }}",
                     "options": "{{ duplicacy.options }}",
                     "parallel": false,
                     "global_options": "{{ duplicacy.global_options }}",
                     "status_code": "",
                     "status_note": "",
                     "status_log": "",
-                    "status_time": ""
+                    "status_time": "0001-01-01T00:00:00Z"
                 },
                 {
                     "type": "check",
-                    "computer": "{{ containers.host.subdomain }}",
+                    "computer": "{{ containers.duplicacy.subdomain }}",
                     "repository": 0,
                     "source": "",
-                    "storage": "{{ directories.name }}",
+                    "storage": "{{ duplicacy.name }}",
                     "options": "{{ duplicacy.options }}",
                     "parallel": false,
                     "global_options": "{{ duplicacy.global_options }}",
                     "status_code": "",
                     "status_note": "",
                     "status_log": "",
-                    "status_time": ""
+                    "status_time": "0001-01-01T00:00:00Z"
                 },
                 {
                     "type": "prune",
-                    "computer": "{{ containers.host.subdomain }}",
+                    "computer": "{{ containers.duplicacy.subdomain }}",
                     "repository": 0,
                     "source": "",
-                    "storage": "{{ directories.name }}",
+                    "storage": "{{ duplicacy.name }}",
                     "options": "{{ duplicacy.keep_options }} -id {{ duplicacy.id }} {{ duplicacy.prune_options }}",
                     "parallel": false,
                     "global_options": "{{ duplicacy.global_options }}",
                     "status_code": "",
                     "status_note": "",
                     "status_log": "",
-                    "status_time": ""
+                    "status_time": "0001-01-01T00:00:00Z"
                 }
             ],
             "email_enabled": {{ duplicacy.email_enabled }},
@@ -97,7 +97,7 @@
     ],
     "encryption_data": "{{ duplicacy.encryption_data }}",
     "cli_version": "",
-    "administration_token": "",
-    "administration_token_expiration": 86400,
+    "administration_token": "{{ duplicacy.administration_token }}",
+    "administration_token_expiration": 604800,
     "license_id": "{{ duplicacy.license_id }}"
 }

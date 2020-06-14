@@ -4,9 +4,10 @@
   become: true
   vars_files: vars.yml
   roles: 
-# Core Roles to get the host up
+# Bootstrap host
 #   - host-setup
-#   - docker-duplicacy
+# Starting core services
+  - docker-duplicacy
 #   - docker-gc
 #   - docker-rclone
 #   - docker-watchtower
