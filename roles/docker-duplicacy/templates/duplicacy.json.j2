@@ -1,7 +1,7 @@
 {
     "storages": [
         {
-            "name": "{{ directories.name }}",
+            "name": "{{ duplicacy.name }}",
             "url": "gcd://{{ duplicacy.remote_folder }}",
             "encrypted": false,
             "credentials": {
@@ -17,7 +17,7 @@
                     "index": 0,
                     "id": "{{ duplicacy.id }}",
                     "path": "{{ directories.container_root }}",
-                    "storage": "{{ directories.name }}",
+                    "storage": "{{ duplicacy.name }}",
                     "global_options": "{{ duplicacy.global_options }}",
                     "options": "{{ duplicacy.options }}",
                     "report_url_enabled": false,
@@ -75,7 +75,7 @@
                     "repository": 0,
                     "source": "",
                     "storage": "{{ directories.name }}",
-                    "options": "{{ duplicacy.keep_options }} -id {{ duplicacy.id }} {{ duplicacy.options }}",
+                    "options": "{{ duplicacy.keep_options }} -id {{ duplicacy.id }} {{ duplicacy.prune_options }}",
                     "parallel": false,
                     "global_options": "{{ duplicacy.global_options }}",
                     "status_code": "",
