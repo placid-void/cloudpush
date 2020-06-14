@@ -25,7 +25,7 @@
 # SampleIDs
 #
 # This is a list of identifiers used for samples. e.g sample,-s. Use 'SizeOnly' to delete all media files less than maxSampleSize.
-#SampleIDs=sample,-s. 
+#SampleIDs=sample,-s.
 
 ### NZBGET POST-PROCESSING SCRIPT                                          ###
 ##############################################################################
@@ -46,11 +46,11 @@ def is_sample(filePath, inputName, maxSampleSize, SampleIDs):
             return True
         # Ignore 'sample' in files unless 'sample' in Torrent Name
         for ident in SampleIDs:
-            if ident.lower() in filePath.lower() and not ident.lower() in inputName.lower(): 
+            if ident.lower() in filePath.lower() and not ident.lower() in inputName.lower():
                 return True
     # Return False if none of these were met.
     return False
-  
+
 if 'NZBOP_SCRIPTDIR' not in os.environ:
     print("This script can only be called from NZBGet (11.0 or later).")
     sys.exit(0)

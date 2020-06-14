@@ -17,12 +17,12 @@
 # Set the directory where you want all files to be moved to.
 # Use this if you want all downloaded files in a single "root" directory.
 # If left blank, files will all be "flattened" into the individual download's sub-directory.
-#DestinationDirectory=
+# DestinationDirectory=
 
 # Append Categories (yes, no).
-# 
+#
 # If using the Destination Directory above, then this option will append the download category.
-#AppendCategories=no
+# AppendCategories=no
 
 
 ### NZBGET POST-PROCESSING SCRIPT                                          ###
@@ -42,14 +42,17 @@ if 'NZBOP_SCRIPTDIR' not in os.environ:
     sys.exit(0)
 
 if os.environ['NZBOP_VERSION'][0:5] < '11.0':
-    print("[ERROR] NZBGet Version %s is not supported. Please update NZBGet." % (str(os.environ['NZBOP_VERSION'])))
+    print("[ERROR] NZBGet Version %s is not supported. Please update NZBGet." % (
+        str(os.environ['NZBOP_VERSION'])))
     sys.exit(0)
 
-print("Script triggered from NZBGet Version %s." % (str(os.environ['NZBOP_VERSION'])))
+print("Script triggered from NZBGet Version %s." %
+      (str(os.environ['NZBOP_VERSION'])))
 status = 0
 if 'NZBPP_TOTALSTATUS' in os.environ:
     if not os.environ['NZBPP_TOTALSTATUS'] == 'SUCCESS':
-        print("[ERROR] Download failed with status %s." % (os.environ['NZBPP_STATUS']))
+        print("[ERROR] Download failed with status %s." %
+              (os.environ['NZBPP_STATUS']))
         status = 1
 
 else:
@@ -68,24 +71,28 @@ else:
 
         if os.environ['NZBPP_HEALTH'] < 1000:
             print("[ERROR] Download health is compromised and Par-check/repair disabled or no .par2 files found. Setting status \"failed\".")
-            print("[ERROR] Please check your Par-check/repair settings for future downloads.")
+            print(
+                "[ERROR] Please check your Par-check/repair settings for future downloads.")
             status = 1
 
         else:
             print("[ERROR] Par-check/repair disabled or no .par2 files found, and Unpack not required. Health is ok so handle as though download successful.")
-            print("[WARNING] Please check your Par-check/repair settings for future downloads.")
+            print(
+                "[WARNING] Please check your Par-check/repair settings for future downloads.")
 
 # Check if destination directory exists (important for reprocessing of history items)
 if not os.path.isdir(os.environ['NZBPP_DIRECTORY']):
-    print("[ERROR] Nothing to post-process: destination directory", os.environ['NZBPP_DIRECTORY'], "doesn't exist. Setting status \"failed\".")
+    print("[ERROR] Nothing to post-process: destination directory",
+          os.environ['NZBPP_DIRECTORY'], "doesn't exist. Setting status \"failed\".")
     status = 1
 
 # All checks done, now launching the script.
 if status == 1:
     sys.exit(NZBGET_POSTPROCESS_NONE)
 
+
 def removeEmptyFolders(path, removeRoot=True):
-    #Function to remove empty folders
+    # Function to remove empty folders
     if not os.path.isdir(path):
         return
 
@@ -103,6 +110,7 @@ def removeEmptyFolders(path, removeRoot=True):
     if len(files) == 0 and removeRoot:
         print("[INFO] Removing empty folder:%s" % path)
         os.rmdir(path)
+
 
 directory = os.path.normpath(os.environ['NZBPP_DIRECTORY'])
 if os.environ['NZBPO_DESTINATIONDIRECTORY'] and os.path.isdir(os.environ['NZBPO_DESTINATIONDIRECTORY']):
