@@ -545,6 +545,14 @@ subtitle_provider:
   opensubtitles:
     password: "{{ lookup('lastpass', 'IT Services/Open Subtitles', field='password') }}"
     username: "{{ lookup('lastpass', 'IT Services/Open Subtitles', field='username') }}"
+  subscene:
+    api: "{{ lookup('lastpass', 'IT Services/Subscene', field='api') }}"
+    password: "{{ lookup('lastpass', 'IT Services/Subscene', field='password') }}"
+    username: "{{ lookup('lastpass', 'IT Services/Subscene', field='username') }}"
+  anti_captcha:
+    api: "{{ lookup('lastpass', 'IT Services/anti-captcha.com', field='api') }}"
+    password: "{{ lookup('lastpass', 'IT Services/anti-captcha.com', field='password') }}"
+    username: "{{ lookup('lastpass', 'IT Services/anti-captcha.com', field='username') }}"
 
 # Trak.TV vars
 trakttv:
