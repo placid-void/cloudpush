@@ -60,8 +60,8 @@
       - type: bind 
         source: "{{ directories.container_root }}/{{ containers.deluge.subdomain }}"
         target: "{{ directories.config_dir }}"
-      - type: volume # Mount shared data volume
-        source: "{{ directories.data_vol }}"
+      - type: bind
+        source: "{{ directories.data_dir }}"
         target: "{{ directories.data_dir }}"
     # Required capabilities for container to function properly
     capabilities: 

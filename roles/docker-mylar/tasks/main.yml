@@ -44,9 +44,9 @@
       - type: bind 
         source: "{{ directories.container_root }}/{{ containers.mylar.subdomain }}"
         target: "{{ directories.config_dir }}"
-      - type: volume # Mount shared data volume
-        source: "{{ directories.data_vol }}"
-        target: /mnt
+      - type: bind
+        source: "{{ directories.data_dir }}"
+        target: "{{ directories.data_dir }}"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container

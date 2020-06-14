@@ -58,8 +58,8 @@
       - type: bind 
         source: "{{ directories.container_root }}/{{ containers.nextcloud.subdomain }}"
         target: /var/www/html
-      - type: volume # Mount shared data volume
-        source: "{{ directories.data_vol }}"
+      - type: bind
+        source: "{{ directories.data_dir }}"
         target: "{{ directories.data_dir }}"
     # Nextcloud user details
     user: "{{ users.primary.uid }}:{{ users.primary.gid }}"

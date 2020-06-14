@@ -4,56 +4,56 @@
   become: true
   vars_files: vars.yml
   roles: 
-  # Core Roles to get the host up
-  # - host-setup
-  # - docker-duplicacy
-  # - docker-gc
-  # - docker-rclone
-  # - docker-watchtower
-  # You now need to restore from the latest Duplicacy backup on the configured remote storage
+# Core Roles to get the host up
+#   - host-setup
+#   - docker-duplicacy
+#   - docker-gc
+#   - docker-rclone
+#   - docker-watchtower
+# You now need to restore from the latest Duplicacy backup on the configured remote storage
 
-  # Required Roles for other containers
-  # - docker-mariadb
-  # - database-mariadb
-  # - docker-portainer
-  # - docker-influxdb
-  # - docker-traefik
+# Required Roles for other containers
+#   - docker-mariadb
+#   - database-mariadb
+#   - docker-portainer
+#   - docker-influxdb
+#   - docker-traefik
 
-  # Starting Backend Services
-  # - docker-alltube
-  # - docker-bookstack
-  # - docker-delugevpn
-  # - docker-goautoyt
-  # - docker-nzbget
-  # - docker-nzbhydra
-  # - docker-lazylibrarian
-  # - docker-lidarr
-  # - docker-mylar
-  # - docker-nextcloud
-  # - docker-speedtest
-  # - docker-radarr
-  # - docker-radarr4k
-  # - docker-sonarr
-  # - docker-sonarr4k
-  # - docker-syncarr-radarr
-  # - docker-syncarr-sonarr
-  # - docker-bazarr
-  # - docker-bazarr4k
-  # - docker-plex
-  # - docker-tautulli
-  # - docker-synclounge
-  # - docker-ombi
-  # - docker-ombi4k
-  # - docker-organizr
-  # - docker-mellow
-  # - docker-traktarr
-  # - docker-grafana
-  # - docker-varken
-  # - docker-emby
-  # - docker-jellyfin
+# Starting Backend Services
+#   - docker-alltube
+#   - docker-bookstack
+#   - docker-delugevpn
+#   - docker-goautoyt
+#   - docker-nzbget
+#   - docker-nzbhydra
+#   - docker-lazylibrarian
+#   - docker-lidarr
+#   - docker-mylar
+#   - docker-nextcloud
+#   - docker-speedtest
+#   - docker-radarr
+#   - docker-radarr4k
+#   - docker-sonarr
+#   - docker-sonarr4k
+#   - docker-syncarr-radarr
+#   - docker-syncarr-sonarr
+#   - docker-bazarr
+#   - docker-bazarr4k
+#   - docker-plex
+#   - docker-tautulli
+#   - docker-synclounge
+#   - docker-ombi
+#   - docker-ombi4k
+#   - docker-organizr
+#   - docker-mellow
+#   - docker-traktarr
+#   - docker-grafana
+#   - docker-varken
+#   - docker-emby
+#   - docker-jellyfin
 
-  # Not implemented fully yet
-  # - docker-elk
-  # - docker-prometheus
-  # - docker-readarr
+# Not implemented fully yet
+#   - docker-elk
+#   - docker-prometheus
+#   - docker-readarr
 ...
