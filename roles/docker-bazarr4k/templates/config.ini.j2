@@ -1,109 +1,139 @@
+[general]
+ip = 0.0.0.0
+port = {{ containers.bazarr4k.port }}
+base_url = /
+path_mappings = [['{{ directories.drive_root }}/{{ directories.tvshows_4k }}', '{{ directories.drive_root }}/{{ directories.tvshows_4k }}'], ['', ''], ['', ''], ['', ''], ['', '']]
+debug = False
+branch = master
+auto_update = True
+single_language = False
+minimum_score = 90
+use_scenename = True
+use_postprocessing = False
+postprocessing_cmd = 
+use_sonarr = True
+use_radarr = True
+path_mappings_movie = [['{{ directories.drive_root }}/{{ directories.movies_4k }}', '{{ directories.drive_root }}/{{ directories.movies_4k }}'], ['', ''], ['', ''], ['', ''], ['', '']]
+serie_default_enabled = True
+serie_default_language = ['en', 'ja']
+serie_default_hi = False
+serie_default_forced = False
+movie_default_enabled = True
+movie_default_language = ['en', 'ja']
+movie_default_hi = False
+movie_default_forced = False
+page_size = 25
+minimum_score_movie = 70
+use_embedded_subs = False
+utf8_encode = True
+ignore_pgs_subs = False
+adaptive_searching = True
+enabled_providers = addic7ed,opensubtitles,podnapisi,subscene,subscenter,supersubtitles,tvsubtitles
+throtteled_providers = {}
+multithreading = True
+chmod_enabled = False
+chmod = 0640
+subfolder = current
+subfolder_custom = 
+update_restart = True
+upgrade_subs = True
+upgrade_frequency = 12
+days_to_upgrade_subs = 30
+upgrade_manual = False
+anti_captcha_provider = None
+wanted_search_frequency = 3
+use_mediainfo = True
+
+[auth]
+type = form
+username = {{ bazarr.bazarr4k.username }}
+password = {{ bazarr.bazarr4k.password }}
+apikey = {{ bazarr.bazarr4k.api }}
+
 [assrt]
 token = 
 
 [sonarr]
+ip = {{ containers.sonarr4k.subdomain }}
+port = {{ containers.sonarr4k.port }}
+base_url = 
+ssl = False
 apikey = {{ api_keys.sonarr4k }}
 full_update = Daily
-ip = {{ containers.sonarr4k.subdomain }}
+full_update_day = 6
+full_update_hour = 4
 only_monitored = False
-base_url = 
-ssl = False
-port = {{ containers.sonarr4k.port }}
 
 [radarr]
-apikey = {{ api_keys.radarr4k }}
-full_update = Daily
 ip = {{ containers.radarr4k.subdomain }}
-only_monitored = False
+port = {{ containers.radarr4k.port }}
 base_url = 
 ssl = False
-port = {{ containers.radarr4k.port }}
+apikey = {{ api_keys.radarr4k }}
+full_update = Daily
+full_update_day = 6
+full_update_hour = 5
+only_monitored = False
 
-[anticaptcha]
-anti_captcha_key = 
+[proxy]
+type = None
+url = 
+port = 
+username = 
+password = 
+exclude = localhost,127.0.0.1
 
-[auth]
-username = {{ bazarr.bazarr4k.username }}
-password = {{ bazarr.bazarr4k.password }}
-type = form
-
-[general]
-update_restart = True
-movie_default_hi = False
-minimum_score = 90
-ip = 0.0.0.0
-use_sonarr = True
-serie_default_language = ['en', 'ja']
-chmod = 0640
-path_mappings_movie = [['{{ directories.drive_root }}/{{ directories.movies_4k }}', '{{ directories.drive_root }}/{{ directories.movies_4k }}']]
-use_scenename = True
-use_mediainfo = True
-movie_default_forced = False
-subfolder_custom = 
-use_postprocessing = False
-enabled_providers = addic7ed,opensubtitles,podnapisi,subscene,subscenter,supersubtitles,tvsubtitles
-serie_default_enabled = True
-port = 6767
-ignore_pgs_subs = False
-movie_default_language = ['en', 'ja']
-days_to_upgrade_subs = 30
-movie_default_enabled = True
-use_radarr = True
-path_mappings = [['{{ directories.drive_root }}/{{ directories.tvshows_4k }}', '{{ directories.drive_root }}/{{ directories.tvshows_4k }}']]
-upgrade_subs = True
-subfolder = current
-base_url = /
-page_size = 25
-utf8_encode = True
-chmod_enabled = False
-auto_update = True
-throtteled_providers = {}
-upgrade_manual = False
-postprocessing_cmd = 
-minimum_score_movie = 70
-branch = master
-serie_default_hi = False
-debug = False
-anti_captcha_provider = None
-single_language = False
-multithreading = True
-use_embedded_subs = True
-adaptive_searching = True
+[opensubtitles]
+username = {{ subtitle_provider.opensubtitles.username }}
+password = {{ subtitle_provider.opensubtitles.password }}
+use_tag_search = False
+vip = False
+ssl = True
+timeout = 15
+skip_wrong_fps = True
 
 [addic7ed]
 username = {{ subtitle_provider.addic7ed.username }}
 password = {{ subtitle_provider.addic7ed.password }}
 random_agents = True
 
-[napisy24]
+[legendasdivx]
 username = 
 password = 
-
-[proxy]
-username = 
-url = 
-exclude = localhost,127.0.0.1
-password = 
-type = None
-port = 
-
-[xsubs]
-username = 
-password = 
+skip_wrong_fps = False
 
 [legendastv]
 username = 
 password = 
 
-[opensubtitles]
-username = {{ subtitle_provider.opensubtitles.username }}
-use_tag_search = False
-skip_wrong_fps = False
-ssl = False
-vip = False
-timeout = 15
-password = {{ subtitle_provider.opensubtitles.password }}
+[xsubs]
+username = 
+password = 
+
+[assrt]
+token = 
+
+[anticaptcha]
+anti_captcha_key = {{ subtitle_provider.anticaptcha.api }}
 
 [deathbycaptcha]
+username = 
+password = 
+
+[napisy24]
+username = 
+password = 
+
+[subscene]
+username = {{ subtitle_provider.subscene.username }}
+password = {{ subtitle_provider.subscene.password }}
+
+[betaseries]
+token = 
+
+[analytics]
+enabled = False
+
+[titlovi]
 username = 
 password =
