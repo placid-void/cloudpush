@@ -1,7 +1,7 @@
 ---
 # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -17,7 +17,7 @@
 
   # DNS Record Creation for public alias of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -49,7 +49,7 @@
     state: started
     restart_policy: unless-stopped
     image: linuxserver/ombi
-    links: # Prevent container creation and startup until linked containers are running 
+    links: # Prevent container creation and startup until linked containers are running
     - "{{ containers.radarr4k.subdomain }}:{{ containers.radarr4k.subdomain }}"
     - "{{ containers.sonarr4k.subdomain }}:{{ containers.sonarr4k.subdomain }}"
     log_driver: "json-file"
@@ -57,10 +57,8 @@
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.ombi4k.subdomain.0 }}"
-        target: "{{ directories.config_dir }}"
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.ombi4k.subdomain.0 }}:/config:z"
     env:
       PUID: "{{ users.primary.uid }}"
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
@@ -69,7 +67,7 @@
       - name: "{{ networks.docker.primary.name }}" # Pass proper UID to the container
         aliases: "{{ containers.ombi4k.subdomain.0 }}"
     purge_networks: yes
-    pull: true 
+    pull: true
     labels:
       ## Watchtower Updates
       com.centurylinklabs.watchtower.enable: "true"

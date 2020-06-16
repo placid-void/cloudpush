@@ -13,13 +13,9 @@
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: /var/run/docker.sock
-        target: /var/run/docker.sock
-      - type: bind 
-        source: /etc
-        target: /etc
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:z"
+      - "/etc:/etc:z"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
@@ -29,7 +25,7 @@
       - name: "{{ networks.docker.primary.name }}"
         aliases: "{{ containers.gc.subdomain }}"
     purge_networks: yes
-    pull: true 
+    pull: true
     labels:
       ## Watchtower Updates
       com.centurylinklabs.watchtower.enable: "true"

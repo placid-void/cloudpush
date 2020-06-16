@@ -1,7 +1,7 @@
 ---
   # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -36,7 +36,7 @@
     owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
     mode: 0550
-  loop: 
+  loop:
     - "openvpn/ca-aes-128-cbc-udp-dns.ovpn"
     - "init.sh"
 
@@ -48,23 +48,20 @@
     state: started
     restart_policy: unless-stopped
     image: binhex/arch-delugevpn
-    links: # Prevent container creation and startup until linked containers are running 
+    links: # Prevent container creation and startup until linked containers are running
       - "{{ containers.rclone.subdomain }}:{{ containers.rclone.subdomain }}"
     # Startup script
-    command: ".{{ directories.config_dir }}/init.sh"
+    command: "./config/init.sh"
     log_driver: "json-file"
     log_options:
       max-size: "12m"
       max-file: "3"
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.deluge.subdomain }}"
-        target: "{{ directories.config_dir }}"
-      - type: bind
-        source: "{{ directories.data_dir }}"
-        target: "{{ directories.data_dir }}"
+    # Mount required directories with the container
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.deluge.subdomain }}:/config:z"
+      - "/opt{{ directories.data_dir }}:{{ directories.data_dir }}:z"
     # Required capabilities for container to function properly
-    capabilities: 
+    capabilities:
       - "NET_ADMIN"
     env:
       DEBUG: "{{ deluge.debug }}" # Debug Option
@@ -76,7 +73,7 @@
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       STRICT_PORT_FORWARD: "{{ deluge.strict_port_forward }}"
-      UMASK: "{{ deluge.umask }}" # File UMASK
+      UMASK: "{{ mount_options.umask }}" # File UMASK
       VPN_ENABLED: "{{ deluge.vpn_enabled }}" # VPN Enabled
       VPN_PASS: "{{ deluge.vpn_pass }}" # VPN Password
       VPN_PROV: "{{ deluge.vpn_prov }}" # VPN Provider
@@ -88,7 +85,7 @@
     # Pass VPN TUN Device to container
     devices: "/dev/net/tun:/dev/net/tun"
     purge_networks: yes
-    pull: true 
+    pull: true
     labels:
       ## Watchtower Updates
       com.centurylinklabs.watchtower.enable: "true"

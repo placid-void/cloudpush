@@ -1,7 +1,7 @@
 ---
   # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -52,7 +52,7 @@
     owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
     mode: 0660
-  
+
   # Standup the container in inventory
 - name: Start Duplicacy
   docker_container:
@@ -66,17 +66,10 @@
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.duplicacy.subdomain }}"
-        target: /etc/duplicacy
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.duplicacy.subdomain }}/cache"
-        target: /var/cache/duplicacy
-      - type: bind 
-        read_only: yes 
-        source: "{{ directories.container_root }}"
-        target: "{{ directories.container_root }}"
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.duplicacy.subdomain }}:/etc/duplicacy:z"
+      - "{{ directories.container_root }}/{{ containers.duplicacy.subdomain }}/cache:/var/cache/duplicacy:z"
+      - "{{ directories.container_root }}:{{ directories.container_root }}:ro"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
@@ -86,7 +79,7 @@
       - name: "{{ networks.docker.primary.name }}"
         aliases: "{{ containers.duplicacy.subdomain }}"
     purge_networks: yes
-    pull: true 
+    pull: true
     labels:
       ## Watchtower Updates
       com.centurylinklabs.watchtower.enable: "true"
@@ -102,4 +95,3 @@
       ## Middlewares
       traefik.http.routers.duplicacy-rtr.middlewares: "chain-oauth@file"
 ...
-  

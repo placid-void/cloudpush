@@ -1,7 +1,7 @@
 ---
   # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -17,7 +17,7 @@
 
   # DNS Record Creation for public alias of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -54,10 +54,8 @@
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.organizr.subdomain.0 }}"
-        target: "{{ directories.config_dir }}"
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.organizr.subdomain.0 }}:/config:z"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container

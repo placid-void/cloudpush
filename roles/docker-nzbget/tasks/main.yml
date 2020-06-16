@@ -1,7 +1,7 @@
 ---
 #   # DNS Record Creation for hostname of container
 # - name: Create DNS Reconds on Cloudflare for this container
-#   cloudflare_dns: 
+#   cloudflare_dns:
 #     account_api_token: "{{ cloudflare.api }}"
 #     account_email: "{{ cloudflare.email }}"
 #     proxied: "yes"
@@ -72,27 +72,21 @@
     state: started
     restart_policy: unless-stopped
     image: linuxserver/nzbget
-    links: # Prevent container creation and startup until linked containers are running 
+    links: # Prevent container creation and startup until linked containers are running
       - "{{ containers.rclone.subdomain }}:{{ containers.rclone.subdomain }}"
     log_driver: "json-file"
     log_options:
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}"
-        target: "{{ directories.config_dir }}"
-        # Mount startup script to container
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}/cont-init.d/30-config"
-        target: /etc/cont-init.d/30-config
-      - type: bind
-        source: "{{ directories.data_dir }}"
-        target: "{{ directories.data_dir }}"
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}:/config:z"
+      - "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}/cont-init.d/30-config:/etc/cont-init.d/30-config:z"
+      - "/opt{{ directories.data_dir }}:{{ directories.data_dir }}:z"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      UMASK: "{{ mount_options.umask }}" # File UMASK
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

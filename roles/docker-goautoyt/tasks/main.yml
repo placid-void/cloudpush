@@ -1,7 +1,7 @@
 ---
   # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -42,30 +42,27 @@
     state: started
     restart_policy: unless-stopped
     image: xiovv/go-auto-yt:stable
-    links: # Prevent container creation and startup until linked containers are running 
+    links: # Prevent container creation and startup until linked containers are running
       - "{{ containers.rclone.subdomain }}:{{ containers.rclone.subdomain }}"
     log_driver: "json-file"
     log_options:
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.goautoyt.subdomain }}"
-        target: /app/config
-      - type: bind
-        source: "{{ directories.data_dir }}/media/Youtube"
-        target: /app/downloads
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.goautoyt.subdomain }}:/app/config:z"
+      - "/opt{{ directories.drive_root }}/Youtube:/app/downloads:z"
     volumes_from: "{{ containers.rclone.subdomain }}" # Include Data volume from Rclone container
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      UMASK: "{{ mount_options.umask }}" # File UMASK
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"
         aliases: "{{ containers.goautoyt.subdomain }}"
     purge_networks: yes
-    pull: true 
+    pull: true
     labels:
       ## Watchtower Updates
       com.centurylinklabs.watchtower.enable: "true"

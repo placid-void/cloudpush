@@ -5,7 +5,7 @@
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
-    record: "{{ containers.sonarr.subdomain }}"
+    record: "{{ containers.readarr.subdomain }}"
     solo: "true"
     state: "present"
     type: "{{ item.record }}"
@@ -19,29 +19,20 @@
 - name: check dir ownership
   file:
     recurse: yes
-    path: "{{ directories.container_root }}/{{ containers.sonarr.subdomain }}"
+    path: "{{ directories.container_root }}/{{ containers.readarr.subdomain }}"
     owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
     state: directory
     setype: container_file_t
 
-  # Verify templated required files with correct permissions are created
-- name: Adding Required Files
-  template:
-    src: "templates/config.xml.j2"
-    dest: "{{ directories.container_root }}/{{ containers.sonarr.subdomain }}/config.xml"
-    owner: "{{ users.primary.user }}"
-    group: "{{ users.primary.group }}"
-    mode: 0660
-
   # Standup the container in inventory
-- name: Start Sonarr
+- name: Start Readarr
   docker_container:
-    name: "{{ containers.sonarr.subdomain }}"
-    hostname: "{{ containers.sonarr.subdomain }}"
+    name: "{{ containers.readarr.subdomain }}"
+    hostname: "{{ containers.readarr.subdomain }}"
     state: started
     restart_policy: unless-stopped
-    image: linuxserver/sonarr
+    image: hotio/readarr:unstable
     links: # Prevent container creation and startup until linked containers are running
     - "{{ containers.nzbget.subdomain }}:{{ containers.nzbget.subdomain }}"
     log_driver: "json-file"
@@ -50,16 +41,16 @@
       max-file: "3"
     # Mount required directories with the container
     volumes:
-      - "{{ directories.container_root }}/{{ containers.sonarr.subdomain }}:/config:z"
+      - "{{ directories.container_root }}/{{ containers.readarr.subdomain }}:/config/app:z"
       - "/opt{{ directories.data_dir }}:{{ directories.data_dir }}:z"
     env:
-      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
-      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
-      UMASK: "{{ mount_options.umask }}" # File UMASK
+      DEBUG: "yes"
+      PUID: "{{ users.primary.uid }}"
+      PGID: "{{ users.primary.gid }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"
-        aliases: "{{ containers.sonarr.subdomain }}"
+        aliases: "{{ containers.readarr.subdomain }}"
     purge_networks: yes
     pull: true
     labels:
@@ -68,12 +59,12 @@
       ## Enable Traefik
       traefik.enable: "true"
       ## HTTP Routers
-      traefik.http.routers.sonarr-rtr.entrypoints: "https"
-      traefik.http.routers.sonarr-rtr.rule: "Host(`{{ containers.sonarr.subdomain }}.{{ containers.sonarr.tld }}`)"
-      traefik.http.routers.sonarr-rtr.tls: "true"
+      traefik.http.routers.readarr-rtr.entrypoints: "https"
+      traefik.http.routers.readarr-rtr.rule: "Host(`{{ containers.readarr.subdomain }}.{{ containers.readarr.tld }}`)"
+      traefik.http.routers.readarr-rtr.tls: "true"
       ## HTTP Services
-      traefik.http.routers.sonarr-rtr.service: "sonarr-svc"
-      traefik.http.services.sonarr-svc.loadbalancer.server.port: "{{ containers.sonarr.port | default('80') }}"
+      traefik.http.routers.readarr-rtr.service: "readarr-svc"
+      traefik.http.services.readarr-svc.loadbalancer.server.port: "{{ containers.readarr.port | default('80') }}"
       ## Middlewares
-      traefik.http.routers.sonarr-rtr.middlewares: "chain-oauth@file"
+      traefik.http.routers.readarr-rtr.middlewares: "chain-oauth@file"
 ...

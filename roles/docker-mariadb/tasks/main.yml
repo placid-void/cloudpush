@@ -22,13 +22,9 @@
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.mariadb.subdomain }}"
-        target: "{{ directories.config_dir }}"
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.mariadb.subdomain }}/db"
-        target: /var/lib/mysql
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.mariadb.subdomain }}:/config:z"
+      - "{{ directories.container_root }}/{{ containers.mariadb.subdomain }}/db:/var/lib/mysql:z"
     ports:
       - "{{ mariadb.login_port }}:{{ mariadb.login_port }}/tcp"
     env:

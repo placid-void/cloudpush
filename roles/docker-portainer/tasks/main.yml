@@ -1,7 +1,7 @@
 ---
 # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -14,7 +14,7 @@
   loop:
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
-    
+
   # Verify required directories with correct permissions are created
 - name: check dir ownership
   file:
@@ -39,13 +39,9 @@
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: /var/run/docker.sock
-        target: /var/run/docker.sock
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.portainer.subdomain }}"
-        target: "{{ directories.data_dir }}"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:z"
+      - "{{ directories.container_root }}/{{ containers.portainer.subdomain }}:{{ directories.data_dir }}:z"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
@@ -54,7 +50,7 @@
       - name: "{{ networks.docker.primary.name }}"
         aliases: "{{ containers.portainer.subdomain }}"
     purge_networks: yes
-    pull: true 
+    pull: true
     labels:
       ## Watchtower Updates
       com.centurylinklabs.watchtower.enable: "true"

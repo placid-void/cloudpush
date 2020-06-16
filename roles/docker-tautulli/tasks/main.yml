@@ -1,7 +1,7 @@
 ---
   # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -48,25 +48,17 @@
     state: started
     restart_policy: unless-stopped
     image: linuxserver/tautulli
-    links: # Prevent container creation and startup until linked containers are running 
+    links: # Prevent container creation and startup until linked containers are running
     - "{{ containers.plex.subdomain }}:{{ containers.plex.subdomain }}"
     log_driver: "json-file"
     log_options:
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}"
-        target: "{{ directories.config_dir }}"
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/scripts/99-requests.sh"
-        target: /etc/cont-init.d/99-requests.sh
-        # Mount Plex Server logs
-      - type: bind 
-        read_only: yes 
-        source: "{{ directories.container_root }}/{{ containers.plex.subdomain }}/Library/Application Support/Plex Media Server/Logs"
-        target: /logs
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}:/config:z"
+      - "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/scripts/99-requests.sh:/etc/cont-init.d/99-requests.sh:z"
+      - "{{ directories.container_root }}/{{ containers.plex.subdomain }}/Library/Application Support/Plex Media Server/Logs:/logs:ro" # Mount Plex Server logs
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
@@ -75,7 +67,7 @@
       - name: "{{ networks.docker.primary.name }}"
         aliases: "{{ containers.tautulli.subdomain }}"
     purge_networks: yes
-    pull: true 
+    pull: true
     labels:
       ## Watchtower Updates
       com.centurylinklabs.watchtower.enable: "true"

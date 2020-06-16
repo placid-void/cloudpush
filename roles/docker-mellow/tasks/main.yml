@@ -1,7 +1,7 @@
 ---
   # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -42,17 +42,15 @@
     state: started
     restart_policy: unless-stopped
     image: voidp/mellow
-    links: # Prevent container creation and startup until linked containers are running 
+    links: # Prevent container creation and startup until linked containers are running
     - "{{ containers.ombi.subdomain.0 }}:{{ containers.ombi.subdomain.0 }}"
     log_driver: "json-file"
     log_options:
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ mellow.rclone.subdomain }}"
-        target: /usr/src/app/data
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.mellow.subdomain }}:/usr/src/app/data:z"
     env:
       PORT: "5060" # Mellow port
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
@@ -62,7 +60,7 @@
       - name: "{{ networks.docker.primary.name }}"
         aliases: "{{ containers.mellow.subdomain }}"
     purge_networks: yes
-    pull: true 
+    pull: true
     labels:
       ## Watchtower Updates
       com.centurylinklabs.watchtower.enable: "true"

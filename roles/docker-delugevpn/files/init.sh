@@ -4,7 +4,7 @@
 set -e
 
 # redirect new file descriptors and then tee stdout & stderr to supervisor log and console (captures output from this script)
-exec 3>&1 4>&2 &> >(tee -a {{ directories.config_dir }}/supervisord.log)
+exec 3>&1 4>&2 &> >(tee -a /config/supervisord.log)
 
 cat << "EOF"
 Created by...
@@ -70,14 +70,14 @@ fi
 
 # check for presence of perms file, if it exists then skip setting
 # permissions, otherwise recursively set on volume mappings for host
-# if [[ ! -f "{{ directories.config_dir }}/perms.txt" ]]; then
+# if [[ ! -f "/config/perms.txt" ]]; then
 
 # 	echo "[info] Setting permissions recursively on volume mappings..." | ts '%Y-%m-%d %H:%M:%.S'
 
 # 	if [[ -d "{{ directories.data_dir }}" ]]; then
-# 		volumes=( "{{ directories.config_dir }}" "{{ directories.data_dir }}" )
+# 		volumes=( "/config" "{{ directories.data_dir }}" )
 # 	else
-# 		volumes=( "{{ directories.config_dir }}" )
+# 		volumes=( "/config" )
 # 	fi
 
 # 	set +e
@@ -91,7 +91,7 @@ fi
 # 		echo "[warn] Unable to chown/chmod ${volumes}, assuming SMB mountpoint"
 # 	fi
 
-# 	echo "This file prevents permissions from being applied/re-applied to {{ directories.config_dir }}, if you want to reset permissions then please delete this file and restart the container." > {{ directories.config_dir }}/perms.txt
+# 	echo "This file prevents permissions from being applied/re-applied to /config, if you want to reset permissions then please delete this file and restart the container." > /config/perms.txt
 
 # else
 
@@ -143,29 +143,29 @@ fi
 if [[ $VPN_ENABLED == "yes" ]]; then
 
 	# create directory to store openvpn config files
-	mkdir -p {{ directories.config_dir }}/openvpn
+	mkdir -p /config/openvpn
 
-	# set perms and owner for files in {{ directories.config_dir }}/openvpn directory
+	# set perms and owner for files in /config/openvpn directory
 	set +e
-	chown -R "${PUID}":"${PGID}" "{{ directories.config_dir }}/openvpn" &> /dev/null
+	chown -R "${PUID}":"${PGID}" "/config/openvpn" &> /dev/null
 	exit_code_chown=$?
-	chmod -R 775 "{{ directories.config_dir }}/openvpn" &> /dev/null
+	chmod -R 775 "/config/openvpn" &> /dev/null
 	exit_code_chmod=$?
 	set -e
 
 	if (( ${exit_code_chown} != 0 || ${exit_code_chmod} != 0 )); then
-		echo "[warn] Unable to chown/chmod {{ directories.config_dir }}/openvpn/, assuming SMB mountpoint" | ts '%Y-%m-%d %H:%M:%.S'
+		echo "[warn] Unable to chown/chmod /config/openvpn/, assuming SMB mountpoint" | ts '%Y-%m-%d %H:%M:%.S'
 	fi
 
 	# force removal of mac os resource fork files in ovpn folder
-	rm -rf {{ directories.config_dir }}/openvpn/._*.ovpn
+	rm -rf /config/openvpn/._*.ovpn
 
 	# wildcard search for openvpn config files (match on first result)
-	export VPN_CONFIG=$(find {{ directories.config_dir }}/openvpn -maxdepth 1 -name "*.ovpn" -print -quit)
+	export VPN_CONFIG=$(find /config/openvpn -maxdepth 1 -name "*.ovpn" -print -quit)
 
-	# if ovpn file not found in {{ directories.config_dir }}/openvpn then exit
+	# if ovpn file not found in /config/openvpn then exit
 	if [[ -z "${VPN_CONFIG}" ]]; then
-		echo "[crit] No OpenVPN config file located in {{ directories.config_dir }}/openvpn/ (ovpn extension), please download from your VPN provider and then restart this container, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
+		echo "[crit] No OpenVPN config file located in /config/openvpn/ (ovpn extension), please download from your VPN provider and then restart this container, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
 	fi
 
 	echo "[info] OpenVPN config file (ovpn extension) is located at ${VPN_CONFIG}" | ts '%Y-%m-%d %H:%M:%.S'

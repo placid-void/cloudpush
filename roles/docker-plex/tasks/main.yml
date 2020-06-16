@@ -1,7 +1,7 @@
 ---
   # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -39,23 +39,20 @@
     state: started
     restart_policy: unless-stopped
     image: plexinc/pms-docker
-    links: # Prevent container creation and startup until linked containers are running 
+    links: # Prevent container creation and startup until linked containers are running
       - "{{ containers.rclone.subdomain }}:{{ containers.rclone.subdomain }}"
     log_driver: "json-file"
     log_options:
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.plex.subdomain }}"
-        target: "{{ directories.config_dir }}"
-      - type: bind
-        source: "{{ directories.data_dir }}"
-        target: "{{ directories.data_dir }}"
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.organizr.subdomain }}:/config:z"
+      - "/opt{{ directories.drive_root }}:{{ directories.drive_root }}:z"
     env:
       PLEX_UID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PLEX_GID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      UMASK: "{{ mount_options.umask }}" # File UMASK
     devices: "{{ '/dev/dri:/dev/dri' if dev_dri.stat.exists == True | default(False) else omit }}" # Pass GPU to the container, if it exists
     # Block Plex Spying
     etc_hosts:
@@ -70,7 +67,7 @@
       - name: "{{ networks.docker.primary.name }}"
         aliases: "{{ containers.plex.subdomain }}"
     purge_networks: yes
-    pull: true 
+    pull: true
     labels:
       ## Watchtower Updates
       com.centurylinklabs.watchtower.enable: "true"

@@ -1,0 +1,23 @@
+---
+  # Standup the container in inventory
+- name: Start Node Exporter
+  docker_container:
+    name: "{{ containers.node_exporter.subdomain }}"
+    hostname: "{{ containers.node_exporter.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: prom/node-exporter
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.node_exporter.subdomain }}"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+...

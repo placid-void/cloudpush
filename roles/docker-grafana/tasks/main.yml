@@ -1,7 +1,7 @@
 ---
-  # DNS Record Creation for hostname of container
+# DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -12,24 +12,31 @@
     value: "{{ item.value }}"
     zone: "{{ domain }}"
   loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+    - { type: "A", value: "{{ ansible_default_ipv4.address }}" }
+    - { type: "AAAA", value: "{{ ansible_default_ipv6.address }}" }
 
   # Verify required directories with correct permissions are created
 - name: check dir ownership
   file:
     recurse: yes
-    path: "{{ directories.container_root }}/{{ containers.grafana.subdomain }}/"
+    path: "{{ directories.container_root }}/{{ item }}"
     state: directory
     setype: container_file_t
     owner: "{{ users.grafana.user }}"
     group: "{{ users.grafana.group }}"
+  loop:
+    - "{{ containers.grafana.subdomain }}"
+    - "{{ containers.grafana.subdomain }}/data"
+    - "{{ containers.grafana.subdomain }}/home"
+    - "{{ containers.grafana.subdomain }}/logs"
+    - "{{ containers.grafana.subdomain }}/plugins"
+    - "{{ containers.grafana.subdomain }}/provisioning"
 
   # Verify required files with correct permissions are created
 - name: copy Grafana provisioning folder to host
   copy:
     src: "files/"
-    dest: "{{ directories.container_root }}/{{ containers.grafana.subdomain }}/config"
+    dest: "{{ directories.container_root }}/{{ containers.grafana.subdomain }}"
     owner: "{{ users.grafana.user }}"
     group: "{{ users.grafana.group }}"
     mode: 0660
@@ -38,7 +45,7 @@
 - name: Adding grafana.ini template
   template:
     src: "templates/grafana.ini.j2"
-    dest: "{{ directories.container_root }}/{{ containers.grafana.subdomain }}/config/grafana.ini"
+    dest: "{{ directories.container_root }}/{{ containers.grafana.subdomain }}/grafana.ini"
     owner: "{{ users.grafana.user }}"
     group: "{{ users.grafana.group }}"
     mode: 0660
@@ -51,44 +58,48 @@
     state: started
     restart_policy: unless-stopped
     image: grafana/grafana
-    links: # Prevent container creation and startup until linked containers are running 
-    - "{{ containers.plex.subdomain }}:{{ containers.plex.subdomain }}"
+    links: # Prevent container creation and startup until linked containers are running
+      - "{{ containers.influxdb.subdomain }}:{{ containers.influxdb.subdomain }}"
+      - "{{ containers.plex.subdomain }}:{{ containers.plex.subdomain }}"
+      - "{{ containers.prometheus.subdomain }}:{{ containers.prometheus.subdomain }}"
     log_driver: "json-file"
     log_options:
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.grafana.subdomain }}/config/provisioning"
-        target: /etc/grafana/provisioning
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.grafana.subdomain }}/data"
-        target: /var/lib/grafana
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.grafana.subdomain }}:/config:z"
     # Grafana user details
     user: "{{ users.grafana.uid }}:{{ users.grafana.gid }}"
     env:
-      GF_ALERTING_EXECUTE_ALERTS: 'true' # Should Grafana execute alerts
-      GF_ANALYTICS_CHECK_FOR_UPDATES: 'false' # Should Grafana check for updates
-      GF_ANALYTICS_REPORTING_ENABLED: 'false' # Should Grafana report annonymous usage data back to the Grafana Dev?
-      GF_AUTH_DISABLE_LOGIN_FORM: 'false' # Disable login form
-      GF_AUTH_DISABLE_SIGNOUT_MENU: 'true' # Disable signout menu
+      GF_ALERTING_EXECUTE_ALERTS: "true" # Should Grafana execute alerts
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false" # Should Grafana check for updates
+      GF_ANALYTICS_REPORTING_ENABLED: "false" # Should Grafana report annonymous usage data back to the Grafana Dev?
+      GF_AUTH_DISABLE_LOGIN_FORM: "false" # Disable login form
+      GF_AUTH_DISABLE_SIGNOUT_MENU: "true" # Disable signout menu
       GF_DATABASE_HOST: "{{ containers.mariadb.subdomain }}:{{ containers.mariadb.port }}" # MariaDB host
       GF_DATABASE_NAME: "{{ containers.grafana.subdomain }}" # MariaDB database
       GF_DATABASE_TYPE: "mysql" # Database type
       GF_DATABASE_PASSWORD: "{{ mariadb.grafana_passwd }}" # MariaDB Grafana password
       GF_DATABASE_USER: "{{ containers.grafana.subdomain }}" # MariaDB Grafana username
-      GF_EXPLORE_ENABLED: 'true' # Enable Grafana dashboard exploration
-      GF_INSTALL_PLUGINS: "agenty-flowcharting-panel,briangann-datatable-panel,camptocamp-prometheus-alertmanager-datasource,\
-      cloudflare-app,grafana-clock-panel,grafana-influxdb-flux-datasource,grafana-piechart-panel,grafana-worldmap-panel,\
-      fetzerch-sunandmoon-datasource,mtanda-google-calendar-datasource,natel-influx-admin-panel,natel-plotly-panel" # Plugins to install on Grafana start
+      GF_EXPLORE_ENABLED: "true" # Enable Grafana dashboard exploration
+      GF_INSTALL_PLUGINS:
+        "agenty-flowcharting-panel,briangann-datatable-panel,camptocamp-prometheus-alertmanager-datasource,\
+        cloudflare-app,grafana-clock-panel,grafana-influxdb-flux-datasource,grafana-piechart-panel,grafana-worldmap-panel,\
+        fetzerch-sunandmoon-datasource,mtanda-google-calendar-datasource,natel-influx-admin-panel,natel-plotly-panel" # Plugins to install on Grafana start
       GF_LOG_LEVEL: info # Grafana Log Level
       GF_LOGIN_COOKIE_NAME: "{{ grafana.vars.cookie_name }}" # Grafana Cookie Name
+      GF_PATHS_CONFIG: "/config/grafana.ini"
+      GF_PATHS_DATA: "/config/data"
+      GF_PATHS_HOME: "/config/home"
+      GF_PATHS_LOGS: "/config/logs"
+      GF_PATHS_PLUGINS: "/config/plugins"
+      GF_PATHS_PROVISIONING: "/config/provisioning"
       GF_SECURITY_ADMIN_USER: "{{ grafana.admin.user }}" # Grafana Administrator username
       GF_SECURITY_ADMIN_PASSWORD: "{{ grafana.admin.password }}" # Grafana Administrator password
       GF_SECURITY_ALLOW_EMBEDDING: "true" # Grafana allow embedding in i-frames
-      GF_SECURITY_COOKIE_SECURE: 'true' # Grafana secure cookie
-      GF_SECURITY_DISABLE_GRAVATAR: 'false' # Should Gravatar be disable in Grafana
+      GF_SECURITY_COOKIE_SECURE: "true" # Grafana secure cookie
+      GF_SECURITY_DISABLE_GRAVATAR: "false" # Should Gravatar be disable in Grafana
       GF_SECURITY_SECRET_KEY: "{{ grafana.admin.secret_key }}" # Grafana secret key
       GF_SESSION_LIFE_TIME: "86400" # Grafana cookie life
       GF_SERVER_DOMAIN: "{{ containers.grafana.subdomain }}.{{ containers.grafana.tld }}" # Grafana Domain
@@ -99,6 +110,9 @@
       GF_USERS_ALLOW_SIGN_UP: "false" # Allow guests to create accounts
       GF_USERS_AUTO_ASSIGN_ORG: "true" # Auto assign org to new users
       GF_USERS_AUTO_ASSIGN_ORG_ROLE: "Admin" # Auto assign org roles to new users
+      INFLUX_TOKEN: ""
+      INFLUX_ORG: ""
+      INFLUX_URL: "{{ containers.influxdb.subdomain }}:{{ containers.influxdb.port }}"
       PUID: "{{ users.grafana.uid }}" # Pass proper UID to the container
       PGID: "{{ users.grafana.gid }}" # Pass proper GID to the container
     networks_cli_compatible: no
@@ -106,7 +120,7 @@
       - name: "{{ networks.docker.primary.name }}"
         aliases: "{{ containers.grafana.subdomain }}"
     purge_networks: yes
-    pull: true 
+    pull: true
     labels:
       ## Watchtower Updates
       com.centurylinklabs.watchtower.enable: "true"
@@ -121,4 +135,3 @@
       traefik.http.services.grafana-svc.loadbalancer.server.port: "{{ containers.grafana.port | default('80') }}"
       ## Middlewares
       traefik.http.routers.grafana-rtr.middlewares: "chain-oauth@file"
-...

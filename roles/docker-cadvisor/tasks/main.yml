@@ -1,0 +1,29 @@
+---
+  # Standup the container in inventory
+- name: Start cAdvisor
+  docker_container:
+    name: "{{ containers.cadvisor.subdomain }}"
+    hostname: "{{ containers.cadvisor.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: gcr.io/google-containers/cadvisor
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    volumes:
+      - "/:/rootfs:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker:/var/lib/docker:ro"
+      - "/var/run:/var/run:rw"
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.cadvisor.subdomain }}"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+...

@@ -1,7 +1,7 @@
 ---
 # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -14,7 +14,7 @@
   loop:
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
-    
+
   # Verify required directories with correct permissions are created
 - name: check dir ownership
   file:
@@ -42,24 +42,26 @@
     state: started
     restart_policy: unless-stopped
     image: prom/prometheus
+    links:  # Prevent container creation and startup until linked containers are running
+    - "{{ containers.cadvisor.subdomain }}:{{ containers.cadvisor.subdomain }}"
+    - "{{ containers.node_exporter.subdomain }}:{{ containers.node_exporter.subdomain }}"
     log_driver: "json-file"
     log_options:
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.prometheus.subdomain }}/prometheus.yml"
-        target: /etc/prometheus/prometheus.yml
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.prometheus.subdomain }}/prometheus.yml:/etc/prometheus/prometheus.yml:z"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+    command: "-config.file=/etc/prometheus/prometheus.yml -storage.local.path=/prometheus"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"
         aliases: "{{ containers.prometheus.subdomain }}"
     purge_networks: yes
-    pull: true 
+    pull: true
     labels:
       ## Watchtower Updates
       com.centurylinklabs.watchtower.enable: "true"

@@ -1,7 +1,7 @@
 ---
   # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -29,14 +29,14 @@
     - "{{ containers.nextcloud.subdomain }}/config"
     - "{{ containers.nextcloud.subdomain }}/data"
 
-  # Verify templated required files with correct permissions are created
-- name: copy config.php template to host
-  template:
-    src: "templates/config.php.j2"
-    dest: "{{ directories.container_root }}/{{ containers.nextcloud.subdomain }}/data/config.php"
-    owner: "{{ users.primary.user }}"
-    group: "{{ users.primary.group }}"
-    mode: 0640
+#   # Verify templated required files with correct permissions are created
+# - name: copy config.php template to host
+#   template:
+#     src: "templates/config.php.j2"
+#     dest: "{{ directories.container_root }}/{{ containers.nextcloud.subdomain }}/data/config.php"
+#     owner: "{{ users.primary.user }}"
+#     group: "{{ users.primary.group }}"
+#     mode: 0640
 
   # Standup the container in inventory
 - name: Start NextCloud
@@ -46,7 +46,7 @@
     state: started
     restart_policy: unless-stopped
     image: nextcloud
-    links: # Prevent container creation and startup until linked containers are running 
+    links: # Prevent container creation and startup until linked containers are running
       - "{{ containers.mariadb.subdomain }}:{{ containers.mariadb.subdomain }}"
       - "{{ containers.rclone.subdomain }}:{{ containers.rclone.subdomain }}"
     log_driver: "json-file"
@@ -54,33 +54,38 @@
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.nextcloud.subdomain }}"
-        target: /var/www/html
-      - type: bind
-        source: "{{ directories.data_dir }}"
-        target: "{{ directories.data_dir }}"
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.nextcloud.subdomain }}:/config:z"
+      - "/opt{{ directories.data_dir }}:{{ directories.data_dir }}:z"
     # Nextcloud user details
     user: "{{ users.primary.uid }}:{{ users.primary.gid }}"
     env:
-      MYSQL_PASSWORD: "{{ mariadb.nextcloud_db_passwd }}" # MariaDB Password
+      MAIL_DOMAIN: "{{ mail.domain }}"
+      MAIL_FROM_ADDRESS: "{{ mail.from_address }}"
+      MYSQL_PASSWORD: "{{ mariadb.nextcloud_db_passwd }}" # MariaDB Nextcloud password
       MYSQL_DATABASE: "{{ containers.nextcloud.subdomain }}" # Nextcloud Database
-      MYSQL_USER: "{{ containers.nextcloud.subdomain }}" # MariaDB User
-      MYSQL_HOST: "{{ containers.mariadb.subdomain }}:{{ containers.mariadb.port }}" # MariaDB Port
+      MYSQL_USER: "{{ containers.nextcloud.subdomain }}" # MariaDB Nextcloud user
+      MYSQL_HOST: "{{ containers.mariadb.subdomain }}:{{ containers.mariadb.port }}" # MariaDB host and port
       NEXTCLOUD_ADMIN_USER: "{{ mariadb.nextcloud_admin_user }}" # Nextcloud Administrator Username
       NEXTCLOUD_ADMIN_PASSWORD: "{{ mariadb.nextcloud_admin_passwd }}" # Nextcloud Administrator Password
+      NEXTCLOUD_DATA_DIR: "/config" # Nextcloud data directory
       NEXTCLOUD_HOSTNAME: "{{ containers.nextcloud.subdomain }}.{{ containers.nextcloud.tld }}" # Nextcloud Hostname
       NEXTCLOUD_TRUSTED_DOMAINS: "{{ domain }}" # Domains Nextcloud will Trust
+      SMTP_HOST: "{{ mail.smtp_host }}"
+      SMTP_NAME: "{{ mail.smtp_user }}"
+      SMTP_PASSWORD: "{{ mail.smtp_password }}"
+      SMTP_PORT: "{{ mail.smtp_port }}"
+      SMTP_SECURE: "tls"
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      UMASK: "{{ mount_options.umask }}" # File UMASK
     sysctls: "net.ipv4.ip_unprivileged_port_start=0"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"
         aliases: "{{ containers.nextcloud.subdomain }}"
     purge_networks: yes
-    pull: true 
+    pull: true
     labels:
       ## Watchtower Updates
       com.centurylinklabs.watchtower.enable: "true"

@@ -1,7 +1,7 @@
 ---
   # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -44,7 +44,7 @@
 
 #   # Verify mount point bind is not currently mounted
 # - name: Verify mount point is unmounted
-#   command: 
+#   command:
 #     cmd: "umount -l {{ directories.data_dir }}/{{ directories.media_dir }}"
 
   # Standup the container in inventory
@@ -56,31 +56,15 @@
     restart_policy: unless-stopped
     image: rclone/rclone:latest
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.rclone.subdomain }}"
-        target: "{{ directories.config_dir }}/rclone"
-      - type: bind 
-        source: "{{ directories.data_dir }}"
-        target: "{{ directories.data_dir }}"
-        propagation: slave
-      - type: bind
-        source: "{{ directories.drive_root }}"
-        target: "{{ directories.drive_root }}"
-        propagation: shared
-      - type: bind # Force "allow_other" option for FUSE
-        source: "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/fuse.conf"
-        target: /etc/fuse.conf 
-      - type: bind # Required for FUSE to work correctly
-        read_only: yes 
-        source: /etc/passwd 
-        target: /etc/passwd 
-      - type: bind # Required for FUSE to work correctly
-        read_only: yes 
-        source: /etc/group 
-        target: /etc/group 
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}:/config/rclone:z"
+      - "/opt{{ directories.data_dir }}:{{ directories.data_dir }}:slave" # Mount data directory as slave
+      - "/opt{{ directories.drive_root }}:{{ directories.drive_root }}:shared" # Mount drive root directory as shared
+      - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/fuse.conf:/etc/fuse.conf:z" # Force "allow_other" option for FUSE
+      - "/etc/passwd:/etc/passwd:ro" # Required for FUSE to work correctly
+      - "/etc/group:/etc/group:ro" # Required for FUSE to work correctly
     # Required capabilities for container to function properly
-    capabilities: 
+    capabilities:
       - "MKNOD"
       - "SYS_ADMIN"
     # Startup command with options to mount Rclone

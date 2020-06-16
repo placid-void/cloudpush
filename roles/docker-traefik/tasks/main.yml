@@ -1,7 +1,7 @@
 ---
   # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -66,20 +66,15 @@
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        read_only: yes 
-        source: /var/run/docker.sock
-        target: /var/run/docker.sock
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.traefik.subdomain }}"
-        target: "{{ directories.config_dir }}"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "{{ directories.container_root }}/{{ containers.traefik.subdomain }}:/config:z"
     env:
       CF_API_EMAIL: "{{ cloudflare.email }}"
       CF_API_KEY: "{{ cloudflare.api }}"
       TRAEFIK_ACCESSLOG: "true"
       TRAEFIK_ACCESSLOG_BUFFERINGSIZE: "100"
-      TRAEFIK_ACCESSLOG_FILEPATH: "{{ directories.config_dir }}/accesslog.log"
+      TRAEFIK_ACCESSLOG_FILEPATH: "/config/accesslog.log"
       TRAEFIK_ACCESSLOG_FILTERS_STATUSCODES: "400-499"
       TRAEFIK_API: "true"
       # TRAEFIK_API_INSECURE: "true"
@@ -87,7 +82,7 @@
       TRAEFIK_CERTIFICATESRESOLVERS_CLOUDFLARE_ACME_DNSCHALLENGE_PROVIDER: "cloudflare"
       TRAEFIK_CERTIFICATESRESOLVERS_CLOUDFLARE_ACME_DNSCHALLENGE_RESOLVERS: "1.1.1.1:53,1.0.0.1:53"
       TRAEFIK_CERTIFICATESRESOLVERS_CLOUDFLARE_ACME_EMAIL: "{{ cloudflare.email }}"
-      TRAEFIK_CERTIFICATESRESOLVERS_CLOUDFLARE_ACME_STORAGE: "{{ directories.config_dir }}/acme.json"
+      TRAEFIK_CERTIFICATESRESOLVERS_CLOUDFLARE_ACME_STORAGE: "/config/acme.json"
       TRAEFIK_ENTRYPOINTS_HTTP_ADDRESS: ":80"
       TRAEFIK_ENTRYPOINTS_HTTPS_ADDRESS: ":443"
       # Allow these IPs to set the X-Forwarded-* headers - Cloudflare IPs: https://www.cloudflare.com/ips/
@@ -101,7 +96,7 @@
       TRAEFIK_PROVIDERS_DOCKER_ENDPOINT: "unix:///var/run/docker.sock"
       TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT: "false"
       TRAEFIK_PROVIDERS_DOCKER_NETWORK: "{{ networks.docker.primary.name }}"
-      TRAEFIK_PROVIDERS_FILE_DIRECTORY: "{{ directories.config_dir }}/rules" # Load dynamic configuration from one or more .toml or .yml files in a directory.
+      TRAEFIK_PROVIDERS_FILE_DIRECTORY: "/config/rules" # Load dynamic configuration from one or more .toml or .yml files in a directory.
       TRAEFIK_PROVIDERS_FILE_WATCH: "true" # Only works on top level files in the rules folder
       TRAEFIK_SERVERSTRANSPORT_INSECURESKIPVERIFY: "true"
     networks_cli_compatible: no
@@ -141,7 +136,7 @@
 
   # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns: 
+  cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
@@ -163,7 +158,7 @@
     state: started
     restart_policy: unless-stopped
     image: thomseddon/traefik-forward-auth
-    links: # Prevent container creation and startup until linked containers are running 
+    links: # Prevent container creation and startup until linked containers are running
     - "{{ containers.traefik.subdomain }}:{{ containers.traefik.subdomain }}"
     log_driver: "json-file"
     log_options:

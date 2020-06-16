@@ -249,22 +249,11 @@
   #     name: "{{ item }}"
   #     state: present
   #   loop:
-  #     - "babelfish"
-  #     - "guessit<2"
   #     - "docker-py"
-  #     - "lxml"
   #     - "netaddr"
   #     - "pip"
   #     - "pymysql"
-  #     - "pyOpenSSL"
-  #     - "python-dateutil"
-  #     - "QTFastStart"
-  #     - "requests"
-  #     - "requests[security]"
-  #     - "requests-cache"
   #     - "setuptools"
-  #     - "subliminal<2"
-  #     - "stevedore==1.19.1"
 
   # - name: copy .bashrc to folders
   #   template:

@@ -1,22 +1,21 @@
 ---
-  # DNS Record Creation for hostname of container
-- name: check dir ownership
-  file:
-    recurse: yes
-    path: "{{ directories.container_root }}/{{ containers.varken.subdomain }}"
-    state: directory
-    setype: container_file_t
-    owner: "{{ users.grafana.user }}"
-    group: "{{ users.grafana.group }}"
+# - name: check dir ownership
+#   file:
+#     recurse: yes
+#     path: "{{ directories.container_root }}/{{ containers.varken.subdomain }}"
+#     state: directory
+#     setype: container_file_t
+#     owner: "{{ users.primary.user }}"
+#     group: "{{ users.primary.group }}"
 
-  # Verify templated required files with correct permissions are created
-- name: Adding varken.ini template file
-  template:
-    src: "templates/varken.ini.j2"
-    dest: "{{ directories.container_root }}/{{ containers.varken.subdomain }}/varken.ini"
-    owner: "{{ users.grafana.user }}"
-    group: "{{ users.grafana.group }}"
-    mode: 0660
+#   # Verify templated required files with correct permissions are created
+# - name: Adding varken.ini template file
+#   template:
+#     src: "templates/varken.ini.j2"
+#     dest: "{{ directories.container_root }}/{{ containers.varken.subdomain }}/varken.ini"
+#     owner: "{{ users.primary.user }}"
+#     group: "{{ users.primary.group }}"
+#     mode: 0660
 
   # Standup the container in inventory
 - name: Start Varken
@@ -26,7 +25,7 @@
     state: started
     restart_policy: unless-stopped
     image: boerderij/varken
-    links: # Prevent container creation and startup until linked containers are running 
+    links: # Prevent container creation and startup until linked containers are running
     - "{{ containers.influxdb.subdomain }}:{{ containers.influxdb.subdomain }}"
     - "{{ containers.lidarr.subdomain }}:{{ containers.lidarr.subdomain }}"
     - "{{ containers.ombi.subdomain.0 }}:{{ containers.ombi.subdomain.0 }}"
@@ -41,25 +40,109 @@
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    mounts: 
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.varken.subdomain }}"
-        target: "{{ directories.config_dir }}"
-        # Mount InfluxDB to container for database connection
-      - type: bind 
-        source: "{{ directories.container_root }}/{{ containers.influxdb.subdomain }}"
-        target: /var/lib/influxdb 
+    # volumes:
+    #   - "{{ directories.container_root }}/{{ containers.varken.subdomain }}:/config:z"
+    #   - "{{ directories.container_root }}/{{ containers.influxdb.subdomain }}:/var/lib/influxdb:z" # Mount InfluxDB to container for database connection
     # Varken user details
-    user: "{{ users.grafana.uid }}:{{ users.grafana.gid }}"
+    user: "{{ users.primary.uid }}:{{ users.primary.gid }}"
     env:
-      PUID: "{{ users.grafana.uid }}" # Pass proper UID to the container
-      PGID: "{{ users.grafana.gid }}" # Pass proper GID to the container
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      VRKN_GLOBAL_LIDARR_SERVER: "1"
+      VRKN_GLOBAL_MAXMIND_LICENSE_KEY: "{{ api_keys.maxmind }}"
+      VRKN_GLOBAL_OMBI_SERVER_IDS: "1,2"
+      VRKN_GLOBAL_RADARR_SERVER_IDS: "1,2"
+      VRKN_GLOBAL_SICKCHILL_SERVER_IDS: "false"
+      VRKN_GLOBAL_SONARR_SERVER_IDS: "1,2"
+      VRKN_GLOBAL_TAUTULLI_SERVER_IDS: "1"
+      VRKN_GLOBAL_UNIFI_SERVER_IDS: "false"
+      VRKN_INFLUXDB_PASSWORD: "{{ influxdb.password }}"
+      VRKN_INFLUXDB_PORT: "{{ containers.influxdb.port }}"
+      VRKN_INFLUXDB_SSL: "false"
+      VRKN_INFLUXDB_USERNAME: "{{ influxdb.username }}"
+      VRKN_INFLUXDB_URL: "{{ containers.influxdb.subdomain }}"
+      VRKN_INFLUXDB_VERIFY_SSL: "false"
+      VRKN_LIDARR_1_APIKEY: "{{ api_keys.lidarr }}"
+      VRKN_LIDARR_1_FUTURE_DAYS: "30"
+      VRKN_LIDARR_1_FUTURE_DAYS_RUN_SECONDS: "300"
+      VRKN_LIDARR_1_MISSING_DAYS: "30"
+      VRKN_LIDARR_1_MISSING_DAYS_RUN_SECONDS: "300"
+      VRKN_LIDARR_1_QUEUE: "true"
+      VRKN_LIDARR_1_QUEUE_RUN_SECONDS: "300"
+      VRKN_LIDARR_1_SSL: "false"
+      VRKN_LIDARR_1_URL: "{{ containers.lidarr.subdomain }}:{{ containers.lidarr.port }}"
+      VRKN_LIDARR_1_VERIFY_SSL: "false"
+      VRKN_OMBI_1_APIKEY: "{{ api_keys.ombi }}"
+      VRKN_OMBI_1_GET_ISSUE_STATUS_COUNTS: "true"
+      VRKN_OMBI_1_GET_REQUEST_TOTAL_COUNTS: "true"
+      VRKN_OMBI_1_GET_REQUEST_TYPE_COUNTS: "true"
+      VRKN_OMBI_1_ISSUE_STATUS_RUN_SECONDS: "300"
+      VRKN_OMBI_1_REQUEST_TOTAL_RUN_SECONDS: "300"
+      VRKN_OMBI_1_REQUEST_TYPE_RUN_SECONDS: "300"
+      VRKN_OMBI_1_SSL: "false"
+      VRKN_OMBI_1_URL: "{{ containers.ombi.subdomain.0 }}:{{ containers.ombi.port }}"
+      VRKN_OMBI_1_VERIFY_SSL: "false"
+      VRKN_OMBI_2_APIKEY: "{{ api_keys.ombi4k }}"
+      VRKN_OMBI_2_GET_ISSUE_STATUS_COUNTS: "true"
+      VRKN_OMBI_2_GET_REQUEST_TOTAL_COUNTS: "true"
+      VRKN_OMBI_2_GET_REQUEST_TYPE_COUNTS: "true"
+      VRKN_OMBI_2_ISSUE_STATUS_RUN_SECONDS: "300"
+      VRKN_OMBI_2_REQUEST_TOTAL_RUN_SECONDS: "300"
+      VRKN_OMBI_2_REQUEST_TYPE_RUN_SECONDS: "300"
+      VRKN_OMBI_2_SSL: "false"
+      VRKN_OMBI_2_URL: "{{ containers.ombi4k.subdomain.0 }}:{{ containers.ombi4k.port }}"
+      VRKN_OMBI_2_VERIFY_SSL: "false"
+      VRKN_RADARR_1_APIKEY: "{{ api_keys.radarr }}"
+      VRKN_RADARR_1_GET_MISSING: "true"
+      VRKN_RADARR_1_GET_MISSING_RUN_SECONDS: "300"
+      VRKN_RADARR_1_QUEUE: "true"
+      VRKN_RADARR_1_QUEUE_RUN_SECONDS: "300"
+      VRKN_RADARR_1_SSL: "false"
+      VRKN_RADARR_1_URL: "{{ containers.radarr.subdomain }}:{{ containers.radarr.port }}"
+      VRKN_RADARR_1_VERIFY_SSL: "false"
+      VRKN_RADARR_2_APIKEY: "{{ api_keys.radarr4k }}"
+      VRKN_RADARR_2_GET_MISSING: "true"
+      VRKN_RADARR_2_GET_MISSING_RUN_SECONDS: "300"
+      VRKN_RADARR_2_QUEUE: "true"
+      VRKN_RADARR_2_QUEUE_RUN_SECONDS: "300"
+      VRKN_RADARR_2_SSL: "false"
+      VRKN_RADARR_2_URL: "{{ containers.radarr4k.subdomain }}:{{ containers.radarr4k.port }}"
+      VRKN_RADARR_2_VERIFY_SSL: "false"
+      VRKN_SONARR_1_APIKEY: "{{ api_keys.sonarr }}"
+      VRKN_SONARR_1_FUTURE_DAYS: "1"
+      VRKN_SONARR_1_FUTURE_DAYS_RUN_SECONDS: "300"
+      VRKN_SONARR_1_MISSING_DAYS: "7"
+      VRKN_SONARR_1_MISSING_DAYS_RUN_SECONDS: "300"
+      VRKN_SONARR_1_QUEUE: "true"
+      VRKN_SONARR_1_QUEUE_RUN_SECONDS: "300"
+      VRKN_SONARR_1_SSL: "false"
+      VRKN_SONARR_1_URL: "{{ containers.sonarr.subdomain }}:{{ containers.sonarr.port }}"
+      VRKN_SONARR_1_VERIFY_SSL: "false"
+      VRKN_SONARR_2_APIKEY: "{{ api_keys.sonarr4k }}"
+      VRKN_SONARR_2_FUTURE_DAYS: "1"
+      VRKN_SONARR_2_FUTURE_DAYS_RUN_SECONDS: "300"
+      VRKN_SONARR_2_MISSING_DAYS: "7"
+      VRKN_SONARR_2_MISSING_DAYS_RUN_SECONDS: "300"
+      VRKN_SONARR_2_QUEUE: "true"
+      VRKN_SONARR_2_QUEUE_RUN_SECONDS: "300"
+      VRKN_SONARR_2_SSL: "false"
+      VRKN_SONARR_2_URL: "{{ containers.sonarr4k.subdomain }}:{{ containers.sonarr4k.port }}"
+      VRKN_SONARR_2_VERIFY_SSL: "false"
+      VRKN_TAUTULLI_1_APIKEY: "{{ api_keys.tautulli }}"
+      VRKN_TAUTULLI_1_FALLBACK_IP: "1.1.1.1"
+      VRKN_TAUTULLI_1_GET_ACTIVITY: "true"
+      VRKN_TAUTULLI_1_GET_ACTIVITY_RUN_SECONDS: "30"
+      VRKN_TAUTULLI_1_GET_STATS: "true"
+      VRKN_TAUTULLI_1_GET_STATS_RUN_SECONDS: "3600"
+      VRKN_TAUTULLI_1_SSL: "false"
+      VRKN_TAUTULLI_1_URL: "{{ containers.tautulli.subdomain }}:{{ containers.tautulli.port }}"
+      VRKN_TAUTULLI_1_VERIFY_SSL: "false"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"
         aliases: "{{ containers.varken.subdomain }}"
     purge_networks: yes
-    pull: true 
+    pull: true
     labels:
       ## Watchtower Updates
       com.centurylinklabs.watchtower.enable: "true"

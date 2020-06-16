@@ -4,9 +4,9 @@
 [[ -f {{ directories.download_dir }}/nzbget.lock ]] && \
   rm {{ directories.download_dir }}/nzbget.lock
 
-# check if config file exists in {{ directories.config_dir }}
-[[ ! -f {{ directories.config_dir }}/nzbget.conf ]] && \
-  cp /defaults/nzbget.conf {{ directories.config_dir }}/nzbget.conf
+# check if config file exists in /config
+[[ ! -f /config/nzbget.conf ]] && \
+  cp /defaults/nzbget.conf /config/nzbget.conf
 
 # create tmp and nzb folders
   mkdir /tmp
@@ -16,4 +16,4 @@
   rm -r /mnt
   ln -s {{ directories.data_dir }} /mnt
 
-exec {{ directories.config_dir }}/installer/installer.sh
+exec /config/installer/installer.sh
