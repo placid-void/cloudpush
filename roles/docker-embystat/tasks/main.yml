@@ -1,0 +1,70 @@
+---
+  # DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns:
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.embystat.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "{{ containers.embystat.subdomain }}"
+
+  # Standup the container in inventory
+- name: Start EmbyStat
+  docker_container:
+    name: "{{ containers.embystat.subdomain }}"
+    hostname: "{{ containers.embystat.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: linuxserver/embystat
+    links: # Prevent container creation and startup until linked containers are running
+    - "{{ containers.emby.subdomain }}:{{ containers.emby.subdomain }}"
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.embystat.subdomain }}:/config:z"
+    env:
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.embystat.subdomain }}"
+    purge_networks: yes
+    pull: true
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.embystat-rtr.entrypoints: "https"
+      traefik.http.routers.embystat-rtr.rule: "Host(`{{ containers.embystat.subdomain }}.{{ containers.embystat.tld }}`)"
+      traefik.http.routers.embystat-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.embystat-rtr.service: "embystat-svc"
+      traefik.http.services.embystat-svc.loadbalancer.server.port: "{{ containers.embystat.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.embystat-rtr.middlewares: "chain-oauth@file"
+...

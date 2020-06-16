@@ -45,6 +45,7 @@
   # - docker-bazarr4k
   # - docker-plex
   # - docker-tautulli
+  # - docker-embystat
   # - docker-synclounge
   # - docker-ombi
   # - docker-ombi4k

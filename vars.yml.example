@@ -91,6 +91,11 @@ containers:
     port: "8096"
     subdomain: "emby"
     tld: "{{ domain }}"
+  embystat:
+    network: "{{ networks.docker.primary.name }}"
+    port: "6555"
+    subdomain: "embystat"
+    tld: "{{ domain }}"
   gc:
     network: "{{ networks.docker.primary.name }}"
     subdomain: "gc"
