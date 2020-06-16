@@ -24,19 +24,19 @@ users:
     user: "grafana"
 
 # System groups to be created
-system_groups: 
+system_groups:
   - { group: "docker", gid: "998" }
   - { group: "grafana", gid: "472" }
   - { group: "wheel", gid: "999" }
 
 # SSH keys of primary and secondary users
-ssh: 
+ssh:
   primary: "{{ lookup('lastpass', 'user1 pub key', field='Public Key') }}"
   secondary: "{{ lookup('lastpass', 'user2 pub key', field='Public Key') }}"
 
 # Complete list of required container details for docker setup and communication between containers
 containers:
-  # REQUIRED VARIABLES: 
+  # REQUIRED VARIABLES:
   #   subdomain
   #   tld
   # DEFAULTS: (define them if you need to change them)
@@ -45,9 +45,9 @@ containers:
   #   port: 80
   #   host: {{ docker host name }}
   #   network: www
-  # 
+  #
   # Domain Hosts
-  alltube: 
+  alltube:
     network: "{{ networks.docker.primary.name }}"
     subdomain: "alltube"
     tld: "{{ domain }}"
@@ -65,6 +65,11 @@ containers:
     network: "{{ networks.docker.primary.name }}"
     subdomain: "bookstack"
     tld: "{{ control_domain_name }}" # This is an example of the control domain in use. You can switch the TLD on any container this way.
+  cadvisor:
+    network: "{{ networks.docker.primary.name }}"
+    port: "8080"
+    subdomain: "cadvisor"
+    tld: "{{ domain }}"
   cockpit: # Example of a service on the host network being passed into the docker network for use with Traefik
     host: "{{ networks.docker.primary.gateway }}"
     network: "{{ networks.docker.primary.name }}"
@@ -80,11 +85,6 @@ containers:
     network: "{{ networks.docker.primary.name }}"
     port: "3875"
     subdomain: "duplicacy"
-    tld: "{{ domain }}"
-  elk:
-    network: "{{ networks.docker.primary.name }}"
-    port: "5601"
-    subdomain: "elk"
     tld: "{{ domain }}"
   emby:
     network: "{{ networks.docker.primary.name }}"
@@ -150,12 +150,17 @@ containers:
     proto: "https"
     subdomain: "nextcloud"
     tld: "{{ domain }}"
+  node_exporter:
+    network: "{{ networks.docker.primary.name }}"
+    port: "9100"
+    subdomain: "node-exporter"
+    tld: "{{ domain }}"
   nzbget:
     network: "{{ networks.docker.primary.name }}"
     port: "6789"
     subdomain: "nzbget"
     tld: "{{ domain }}"
-  nzbhydra: 
+  nzbhydra:
     network: "{{ networks.docker.primary.name }}"
     port: "5076"
     subdomain: "nzbhydra"
@@ -168,21 +173,21 @@ containers:
   ombi:
     network: "{{ networks.docker.primary.name }}"
     port: "3579"
-    subdomain: 
-      0: "ombi"
-      1: "requests" 
+    subdomain:
+      0: "ombi" # Program subdomain for apps to communicate
+      1: "requests" # Public subdomain for users to access
     tld: "{{ domain }}"
   ombi4k:
     network: "{{ networks.docker.primary.name }}"
     port: "3579"
-    subdomain: 
-      0: "ombi4k"
-      1: "4krequests"
+    subdomain:
+      0: "ombi4k" # Program subdomain for apps to communicate
+      1: "4krequests" # Public subdomain for users to access
     tld: "{{ domain }}"
   organizr:
     network: "{{ networks.docker.primary.name }}"
-    subdomain: 
-      0: "organizr"
+    subdomain:
+      0: "organizr" # Program subdomain for apps to communicate
       1: "www" # Assumes Organizr will be the service you offer on your TLD
     tld: "{{ domain }}"
   plex:
@@ -262,6 +267,11 @@ containers:
     port: "8181"
     subdomain: "tautulli"
     tld: "{{ domain }}"
+  tdarr:
+    network: "{{ networks.docker.primary.name }}"
+    port: "8265"
+    subdomain: "tdarr"
+    tld: "{{ domain }}"
   traefik:
     network: "{{ networks.docker.primary.name }}"
     port: "8080"
@@ -283,23 +293,23 @@ containers:
 
 # Firewall rules for the host
 firewall_rules:
-  ssh:
+  ssh: # Allow SSH access to the host
     name: OpenSSH
     rule: allow
     state: enabled
-  http:
+  http: # Allow incoming traffic on port 80 for Traefik
     port: 80
     proto: tcp
     rule: allow
-  https:
+  https: # Allow incoming traffic on port 443 for Traefik
     port: 443
     proto: tcp
     rule: allow
-  plex:
+  plex: # Open ports for Plex to communicate with Plex.tv
     port: {32400, 3005, 8324}
     proto: tcp
     rule: allow
-  cockpit:
+  cockpit: # Open Cockpit port to Traefik
     port: 9090
     rule: allow
     to_ip: "{{ containers.cockpit.port }}"
@@ -319,7 +329,6 @@ directories:
   tvshows_4k: "4K TV Shows"
   books: "Books"
   cache_dir: "cache"
-  cache_db_dir: "cache-db"
   container_root: "/opt/appdata"
   data_dir: "/data"
   download_dir: "/data/downloads"
@@ -340,6 +349,7 @@ cloudflare:
 api_keys:
   lazylibrarian: "{{ lookup('lastpass', '****/Lazy Librarian', field='api') }}"
   lidarr: "{{ lookup('lastpass', '****/Lidarr', field='api') }}"
+  maxmind: "{{ lookup('lastpass', 'Homelab/maxmind.com', field='lisense') }}"
   nzbhydra: "{{ lookup('lastpass', '****/NZBHydra', field='api') }}"
   ombi: "{{ lookup('lastpass', '****/Ombi', field='api') }}"
   ombi4k: "{{ lookup('lastpass', '****/Ombi4K', field='api') }}"
@@ -355,17 +365,17 @@ oauth:
   tld:
     email_1: "{{ lookup('lastpass', 'Email/****', field='username') }}" # Primary email Oauth should allow
     email_2: "{{ lookup('lastpass', 'Email/****', field='username') }}" # Secondary email Oauth should allow
-    id: "{{ lookup('lastpass', '****/Traefik OAuth Client Details', field='username') }}" 
-    oauth_secret: "{{ lookup('lastpass', '****/Traefik OAuth Client Details', field='oauth_secret') }}" 
-    secret: "{{ lookup('lastpass', '****/Traefik OAuth Client Details', field='password') }}" 
+    id: "{{ lookup('lastpass', '****/Traefik OAuth Client Details', field='username') }}"
+    oauth_secret: "{{ lookup('lastpass', '****/Traefik OAuth Client Details', field='oauth_secret') }}"
+    secret: "{{ lookup('lastpass', '****/Traefik OAuth Client Details', field='password') }}"
 
 # SMTP E-Mail vars
-mail: 
+mail:
   domain: "{{ domain }}" # Email Domain
-  from_address: "****" # Email mail is sent from
+  from_address: "user@example.com" # Email mail is sent from
   smtp_host: "smtp.email.com" # SMTP Host
-  smtp_password: "{{ lookup('lastpass', 'Email/****', field='pp_password') }}"  # SMTP server password
-  smtp_port: "587" # SMTP Port
+  smtp_password: "{{ lookup('lastpass', 'Email/****', field='pp_password') }}" # SMTP server password
+  smtp_port: "587" # SMTP Port # SMTP server port
   smtp_user: "{{ lookup('lastpass', 'Email/****', field='username') }}" # SMTP server username
   tls: "yes" # SMTP TLS use
 
@@ -397,7 +407,7 @@ mount_options:
   vfs_cache_max_age: 3h
   vfs_cache_mode: writes
   vfs_read_chunk_size_limit: "off"
-  cache_settings: 
+  cache_settings:
     chunk_clean_interval: "5m0s"
     chunk_size: "64M"
     chunk_total_size: "50G"
@@ -409,7 +419,7 @@ mount_options:
     tmp_wait_time: "15m"
     tmp_upload_path: "/data/cache/"
     workers: "6"
-  
+
 # Rclone specific vars
 rclone:
   access_token: "{{ lookup('lastpass', '****/Google Drive', field='access_token') }}"
@@ -422,7 +432,7 @@ rclone:
 # Duplicacy specific vars
 duplicacy:
   access_token: "{{ lookup('lastpass', '****/Duplicacy', field='access_token') }}"
-  administration_token: "{{ lookup('lastpass', '****/Johnflix Duplicacy', field='administration_token') }}"
+  administration_token: "{{ lookup('lastpass', '****/Duplicacy', field='administration_token') }}"
   client_id: "{{ lookup('lastpass', '****/Duplicacy', field='client_id') }}"
   email_password: "{{ lookup('lastpass', '****/Duplicacy', field='email_password') }}"
   email_password_hash: "{{ lookup('lastpass', '****/Duplicacy', field='email_password_hash') }}"
@@ -438,11 +448,11 @@ duplicacy:
   id: "gd_" # Duplicacy backups ID
   name: "G_Drive" # Remote storage name
   options: "-stats -threads 5" # Options to be applied to all configured backup and check tasks
-  prune_options: "-exclusive -stats -threads 5" # Options to be applied to all configured prune tasks
+  prune_options: "-a -exclusive -stats -threads 5" # Options to be applied to all configured prune tasks
   keep_options: "-keep 0:365 -keep 30:180 -keep 1:7" # Keep options for backups
   global_options: "-v" # Global options
   backup_name: "Appdata Backup" # Name of the backup task
-  start_time: "12:00PM" # Start time of backup task
+  start_time: "2:00PM" # Start time of backup task
   max_run_time: "06:00" # Max length of backup task
   frequency: "86400" # Frequency of backup task
   days: "1000000" # How long should the task be scheduled for
@@ -452,7 +462,7 @@ duplicacy:
   remote_folder: "Application Data Backup" # Folder on remote storage where backups are stored
 
 # MariaDB specific vars
-mariadb: 
+mariadb:
   bookstack_passwd: "{{ lookup('lastpass', '****/bookstack.mariadb', field='password') }}"
   grafana_passwd: "{{ lookup('lastpass', '****/grafana.mariadb', field='password') }}"
   mariadb_passwd: "{{ lookup('lastpass', '****/MariaDB', field='password') }}"
@@ -468,8 +478,13 @@ mariadb:
 
 # InfluxDB specific vars
 influxdb:
-  password: "root"
-  username: "root"
+  admin_pass: "{{ lookup('lastpass', '****/InfluxDB', field='admin_pass') }}"
+  admin_user: "{{ lookup('lastpass', '****/InfluxDB', field='admin_user') }}"
+  db: "{{ containers.varken.subdomain }}" # Create the Varken InfluxDB database
+  http_auth: "true"
+  password: "{{ lookup('lastpass', '****/InfluxDB', field='password') }}"
+  reporting: "true" # Should anonymous analytics be sent to the InfluxDB devs; Setting to false allows reporting, setting to true prevents reporting
+  username: "{{ lookup('lastpass', '****/InfluxDB', field='username') }}"
 
 # Grafana specific vars
 grafana:
@@ -477,10 +492,10 @@ grafana:
     password: "{{ lookup('lastpass', '****/Grafana', field='password') }}"
     secret_key: "{{ lookup('lastpass', '****/Grafana', field='secret_key') }}"
     user: "{{ lookup('lastpass', '****/Grafana', field='username') }}"
-  auth: 
+  auth:
     client_id: "{{ lookup('lastpass', '****/Grafana', field='client_id') }}"
     client_secret: "{{ lookup('lastpass', '****/Grafana', field='client_secret') }}"
-  vars: 
+  vars:
     cookie_name: "cookie_name"
 
 # NZBGet specific vars
@@ -503,7 +518,7 @@ nzbget:
     username: "{{ lookup('lastpass', '****/NZBGet', field='username') }}" # Username for administrator account
 
 # Deluge specific vars
-deluge: 
+deluge:
   debug: "no"
   deluge_daemon_log_level: "info"
   deluge_web_log_level: "info"
@@ -511,7 +526,6 @@ deluge:
   lan_network: "{{ networks.docker.primary.subnet }}"
   name_servers: "209.222.18.222,84.200.69.80,37.235.1.174,1.1.1.1,209.222.18.218,37.235.1.177,84.200.70.40,1.0.0.1"
   strict_port_forward: "true"
-  umask: "022"
   vpn_enabled: "yes"
   vpn_pass: "{{ lookup('lastpass', 'IT Services/****', field='password') }}"
   vpn_prov: "pia" # VPN Provider
@@ -520,18 +534,20 @@ deluge:
 # Bazarr specific vars
 bazarr:
   bazarr:
+    password: "{{ lookup('lastpass', '****/Bazarr', field='api') }}"
     password: "{{ lookup('lastpass', '****/Bazarr', field='password') }}"
     username: "{{ lookup('lastpass', '****/Bazarr', field='username') }}"
   bazarr4k:
+    password: "{{ lookup('lastpass', '****/Bazarr4K', field='api') }}"
     password: "{{ lookup('lastpass', '****/Bazarr4K', field='password') }}"
     username: "{{ lookup('lastpass', '****/Bazarr4K', field='username') }}"
 
 # Lazy Librarian specific vars
-lazylibrarian: 
-  general: 
+lazylibrarian:
+  general:
     http_pass: "{{ lookup('lastpass', '****/Lazy Librarian', field='password') }}"
     http_user: "{{ lookup('lastpass', '****/Lazy Librarian', field='username') }}"
-  info_sources: 
+  info_sources:
     provider: "GoogleBooks" # What information provider should Lazy Librarian use? Good Reads = 'GoodReads'. Google Books = 'GoogleBooks'.
     goodreads:
       api: "{{ lookup('lastpass', '****/Lazy Librarian', field='goodreads_api') }}"
@@ -541,7 +557,7 @@ lazylibrarian:
 
 # Subtitle Provider vars
 subtitle_provider:
-  addic7ed: 
+  addic7ed:
     password: "{{ lookup('lastpass', 'IT Services/Addic7ed', field='password') }}"
     username: "{{ lookup('lastpass', 'IT Services/Addic7ed', field='username') }}"
   opensubtitles:
