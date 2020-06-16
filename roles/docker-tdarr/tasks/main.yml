@@ -1,0 +1,73 @@
+---
+# DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns:
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.tdarr.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: "A", value: "{{ ansible_default_ipv4.address }}" }
+    - { type: "AAAA", value: "{{ ansible_default_ipv6.address }}" }
+
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ item }}"
+    state: directory
+    setype: container_file_t
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+  loop:
+    - "{{ containers.tdarr.subdomain }}"
+    - "{{ containers.tdarr.subdomain }}/mongodb"
+
+  # Standup the container in inventory
+- name: Start Tdarr
+  docker_container:
+    name: "{{ containers.tdarr.subdomain }}"
+    hostname: "{{ containers.tdarr.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: haveagitgat/tdarr
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.tdarr.subdomain }}:/config:z"
+      - "{{ directories.container_root }}/{{ containers.tdarr.subdomain }}/mongodb:/var/lib/mongodb:z"
+      - "/opt{{ directories.drive_root }}:{{ directories.drive_root }}:z"
+    env:
+      DATA: "/config"
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      UMASK: "{{ mount_options.umask }}" # File UMASK
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.tdarr.subdomain }}"
+    purge_networks: yes
+    pull: true 
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.tdarr-rtr.entrypoints: "https"
+      traefik.http.routers.tdarr-rtr.rule: "Host(`{{ containers.tdarr.subdomain }}.{{ containers.tdarr.tld }}`)"
+      traefik.http.routers.tdarr-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.tdarr-rtr.service: "tdarr-svc"
+      traefik.http.services.tdarr-svc.loadbalancer.server.port: "{{ containers.tdarr.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.tdarr-rtr.middlewares: "chain-oauth@file"
+...
