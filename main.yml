@@ -3,7 +3,7 @@
   hosts: cloudpush
   become: true
   vars_files: vars.yml
-  roles: 
+  roles:
 # Bootstrap host
 #   - host-setup
 # Starting core services
@@ -19,6 +19,9 @@
 #   - docker-portainer
 #   - docker-influxdb
 #   - docker-traefik
+#   - docker-cadvisor
+#   - docker-node-exporter
+#   - docker-prometheus
 
 # Starting Backend Services
 #   - docker-alltube
@@ -50,11 +53,10 @@
 #   - docker-traktarr
 #   - docker-grafana
 #   - docker-varken
+#   - docker-tdarr
 #   - docker-emby
 #   - docker-jellyfin
 
 # Not implemented fully yet
-#   - docker-elk
-#   - docker-prometheus
 #   - docker-readarr
 ...
