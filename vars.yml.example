@@ -70,6 +70,11 @@ containers:
     port: "8080"
     subdomain: "cadvisor"
     tld: "{{ domain }}"
+  cloudbeaver:
+    network: "{{ networks.docker.primary.name }}"
+    port: "8978"
+    subdomain: "cloudbeaver"
+    tld: "{{ domain }}"
   cockpit: # Example of a service on the host network being passed into the docker network for use with Traefik
     host: "{{ networks.docker.primary.gateway }}"
     network: "{{ networks.docker.primary.name }}"
@@ -152,6 +157,7 @@ containers:
     tld: "{{ domain }}"
   nextcloud:
     network: "{{ networks.docker.primary.name }}"
+    port: "443"
     proto: "https"
     subdomain: "nextcloud"
     tld: "{{ domain }}"
@@ -338,6 +344,8 @@ directories:
   data_dir: "/data"
   download_dir: "/data/downloads"
   drive_root: "/data/media"
+  host_data_dir: "/opt/data"
+  host_drive_root: "/opt/data/media"
   incomplete_dir: "/data/incomplete"
   media_dir: "media"
   movies: "Movies"
@@ -471,15 +479,19 @@ mariadb:
   bookstack_passwd: "{{ lookup('lastpass', '****/bookstack.mariadb', field='password') }}"
   grafana_passwd: "{{ lookup('lastpass', '****/grafana.mariadb', field='password') }}"
   mariadb_passwd: "{{ lookup('lastpass', '****/MariaDB', field='password') }}"
-  nextcloud_admin_passwd: "{{ lookup('lastpass', '****/Nextcloud', field='password') }}"
-  nextcloud_admin_user: "{{ lookup('lastpass', '****/Nextcloud', field='user') }}"
   nextcloud_db_passwd: "{{ lookup('lastpass', '****/nextcloud.mariadb', field='password') }}"
-  nextcloud_passwd: "{{ lookup('lastpass', '****/nextcloud.mariadb', field='password') }}"
-  nextcloud_passwd_salt: "{{ lookup('lastpass', '****/Nextcloud', field='password_salt') }}"
-  nextcloud_secret: "{{ lookup('lastpass', '****/Nextcloud', field='secret') }}"
   login_host: "{{ containers.mariadb.subdomain }}"
   login_port: "{{ containers.mariadb.port }}"
   login_user: "{{ lookup('lastpass', '****/MariaDB', field='username') }}"
+
+# Nextcoud specific vars
+nextcloud:
+  admin_passwd: "{{ lookup('lastpass', '****/Nextcloud', field='password') }}"
+  admin_user: "{{ lookup('lastpass', '****/Nextcloud', field='user') }}"
+  instance_id: "{{ lookup('lastpass', 'johnflix.tv/Nextcloud', field='instance_id') }}"
+  passwd: "{{ lookup('lastpass', '****/nextcloud.mariadb', field='password') }}"
+  passwd_salt: "{{ lookup('lastpass', '****/Nextcloud', field='password_salt') }}"
+  secret: "{{ lookup('lastpass', '****/Nextcloud', field='secret') }}"
 
 # InfluxDB specific vars
 influxdb:
