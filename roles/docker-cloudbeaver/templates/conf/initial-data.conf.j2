@@ -1,0 +1,13 @@
+{
+    adminName: "{{ users.primary.user }}",
+    adminPassword: "{{ cloudbeaver.password }}",
+
+    roles: [
+        {
+            roleId: "admin",
+            name: "Admin",
+            description: "Administrative access. Has all permissions.",
+            permissions: [ "public", "admin" ]
+        }
+    ]
+}
