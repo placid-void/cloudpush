@@ -1,0 +1,83 @@
+---
+# https://github.com/dbeaver/cloudbeaver
+  # DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns:
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.cloudbeaver.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "{{ containers.cloudbeaver.subdomain }}"
+
+  # Verify templated required files with correct permissions are created
+- name: Adding Required Files
+  template:
+    src: "templates/{{ item }}.j2"
+    dest: "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0660
+  loop: 
+    - "cloudbeaver.conf"
+    - "data-sources.json"
+
+  # Standup the container in inventory
+- name: Start CloudBeaver
+  docker_container:
+    name: "{{ containers.cloudbeaver.subdomain }}"
+    hostname: "{{ containers.cloudbeaver.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: dalongrong/cloudbeaver
+    links: # Prevent container creation and startup until linked containers are running
+     - "{{ containers.mariadb.subdomain }}:{{ containers.mariadb.subdomain }}"
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}:/config:z"
+    env:
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.cloudbeaver.subdomain }}"
+    purge_networks: yes
+    pull: true
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.cloudbeaver-rtr.entrypoints: "https"
+      traefik.http.routers.cloudbeaver-rtr.rule: "Host(`{{ containers.cloudbeaver.subdomain }}.{{ containers.cloudbeaver.tld }}`)"
+      traefik.http.routers.cloudbeaver-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.cloudbeaver-rtr.service: "cloudbeaver-svc"
+      traefik.http.services.cloudbeaver-svc.loadbalancer.server.port: "{{ containers.cloudbeaver.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.cloudbeaver-rtr.middlewares: "chain-oauth@file"
+...

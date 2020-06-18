@@ -46,6 +46,7 @@
   # - docker-plex
   # - docker-tautulli
   # - docker-embystat
+  # - docker-cloudbeaver
   # - docker-synclounge
   # - docker-ombi
   # - docker-ombi4k

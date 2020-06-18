@@ -59,7 +59,7 @@
     # Mount required directories with the container
     volumes:
       - "{{ directories.container_root }}/{{ containers.deluge.subdomain }}:/config:z"
-      - "/opt{{ directories.data_dir }}:{{ directories.data_dir }}:z"
+      - "{{ directories.host_data_dir }}:{{ directories.data_dir }}:z"
     # Required capabilities for container to function properly
     capabilities:
       - "NET_ADMIN"
