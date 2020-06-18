@@ -3,39 +3,42 @@ $CONFIG = array (
   'htaccess.RewriteBase' => '/',
   'memcache.local' => '\\OC\\Memcache\\APCu',
   'apps_paths' => 
-  array (
-    0 => 
     array (
-      'path' => '/var/www/html/apps',
-      'url' => '/apps',
-      'writable' => false,
+      0 => 
+      array (
+        'path' => '/config/www/nextcloud/apps',
+        'url' => '/apps',
+        'writable' => false,
+      ),
+      1 => 
+      array (
+        'path' => '/config/www/nextcloud/custom_apps',
+        'url' => '/custom_apps',
+        'writable' => true,
+      ),
     ),
-    1 => 
-    array (
-      'path' => '/var/www/html/custom_apps',
-      'url' => '/custom_apps',
-      'writable' => true,
-    ),
-  ),
-  'passwordsalt' => '{{ mariadb.nextcloud_passwd_salt }}',
-  'secret' => '{{ mariadb.nextcloud_secret }}',
+  'memcache.local' => '\\OC\\Memcache\\APCu',
+  'datadirectory' => '/config/www/nextcloud/data',
+  'instanceid' => '{{ nextcloud.instance_id }}',
+  'passwordsalt' => '{{ nextcloud.passwd_salt }}',
+  'secret' => '{{ nextcloud.secret }}',
   'trusted_domains' => 
   array (
     0 => '{{ containers.nextcloud.subdomain }}.{{ containers.nextcloud.tld }}',
   ),
-  'datadirectory' => '/var/www/html/data',
   'dbtype' => 'mysql',
-  'version' => '16.0.1.1',
-  'overwrite.cli.url' => 'http://localhost',
-  'dbname' => '{{ containers.nextcloud.subdomain }}',
-  'dbhost' => '{{ containers.mariadb.subdomain }}:{{ containers.mariadb.port }}',
-  'dbport' => '',
-  'dbtableprefix' => '',
-  'instanceid' => 'ocxq50pzn0eg',
+  'version' => '19.0.0.12',
+  'overwrite.cli.url' => '{{ containers.nextcloud.proto }}://{{ containers.nextcloud.subdomain }}.{{ containers.nextcloud.tld }}',
   'mysql.utf8mb4' => true,
-  'dbuser' => '{{ containers.mariadb.subdomain }}',
-  'dbpassword' => '{{ mariadb.nextcloud_db_passwd }}',
   'installed' => true,
+  'dbname' => '{{ containers.nextcloud.subdomain }}',
+  'dbhost' => '{{ containers.mariadb.subdomain }}',
+  'dbport' => '{{ containers.mariadb.port }}',
+  'dbtableprefix' => '',
+  'mysql.utf8mb4' => true,
+  'dbuser' => '{{ containers.nextcloud.subdomain }}',
+  'dbpassword' => '{{ mariadb.nextcloud_db_passwd }}',
+  'auth.bruteforce.protection.enabled' => true,
   'mail_smtpmode' => 'smtp',
   'mail_smtpauthtype' => 'LOGIN',
   'mail_sendmailmode' => 'smtp',
@@ -47,17 +50,21 @@ $CONFIG = array (
   'mail_smtpport' => '{{ mail.smtp_port }}',
   'mail_smtpname' => '{{ mail.smtp_user }}',
   'mail_smtppassword' => '{{ mail.smtp_password }}',
+  'trusted_proxies' => 
+  array (
+    0 => '{{ networks.docker.primary.subnet }}',
+  ),
   'twofactor_enforced' => 'false',
   'twofactor_enforced_groups' => 
-  array (
-    0 => 'admin',
-    1 => 'Books',
-  ),
+    array (
+      0 => 'admin',
+      1 => 'Books',
+    ),
   'twofactor_enforced_excluded_groups' => 
-  array (
-  ),
+    array (
+    ),
   'app_install_overwrite' => 
-  array (
-    0 => 'files_reader',
-  ),
+    array (
+      0 => 'files_reader',
+    ),
 );
