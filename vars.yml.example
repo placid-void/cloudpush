@@ -479,7 +479,7 @@ mariadb:
   bookstack_passwd: "{{ lookup('lastpass', '****/bookstack.mariadb', field='password') }}"
   grafana_passwd: "{{ lookup('lastpass', '****/grafana.mariadb', field='password') }}"
   mariadb_passwd: "{{ lookup('lastpass', '****/MariaDB', field='password') }}"
-  nextcloud_db_passwd: "{{ lookup('lastpass', '****/nextcloud.mariadb', field='password') }}"
+  nextcloud_passwd: "{{ lookup('lastpass', '****/nextcloud.mariadb', field='password') }}"
   login_host: "{{ containers.mariadb.subdomain }}"
   login_port: "{{ containers.mariadb.port }}"
   login_user: "{{ lookup('lastpass', '****/MariaDB', field='username') }}"

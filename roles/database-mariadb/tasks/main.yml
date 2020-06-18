@@ -1,11 +1,12 @@
 ---
 # Database Creation
-  - name: add bookstack db
+  - name: add required databases
     mysql_db:
       name: 
         - "{{ containers.bookstack.subdomain }}"
         - "{{ containers.grafana.subdomain }}"
         - "{{ containers.nextcloud.subdomain }}"
+        - "{{ containers.statping.subdomain.0 }}"
       login_host: "localhost"
       login_port: "{{ mariadb.login_port }}"
       login_user: "{{ mariadb.login_user }}"
@@ -45,6 +46,19 @@
       password: "{{ mariadb.nextcloud_passwd }}"
       host: "{{ containers.nextcloud.subdomain }}.{{ networks.docker.primary.name }}"
       priv: "{{ containers.nextcloud.subdomain }}.*:ALL"
+      login_host: "localhost"
+      login_port: "{{ mariadb.login_port }}"
+      login_user: "{{ mariadb.login_user }}"
+      login_password: "{{ mariadb.mariadb_passwd }}"
+      state: present
+
+# StatPing User
+  - name: add statping user
+    mysql_user:
+      name: "{{ containers.statping.subdomain.0 }}"
+      password: "{{ mariadb.statping_passwd }}"
+      # host: "{{ containers.statping.subdomain.0 }}.{{ networks.docker.primary.name }}"
+      priv: "{{ containers.statping.subdomain.0 }}.*:ALL"
       login_host: "localhost"
       login_port: "{{ mariadb.login_port }}"
       login_user: "{{ mariadb.login_user }}"

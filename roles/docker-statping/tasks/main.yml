@@ -1,0 +1,98 @@
+---
+#   # DNS Record Creation for hostname of container
+# - name: Create DNS Reconds on Cloudflare for this container
+#   cloudflare_dns:
+#     account_api_token: "{{ cloudflare.api }}"
+#     account_email: "{{ cloudflare.email }}"
+#     proxied: "yes"
+#     record: "{{ containers.statping.subdomain.0 }}"
+#     solo: "true"
+#     state: "present"
+#     type: "{{ item.type }}"
+#     value: "{{ item.value }}"
+#     zone: "{{ domain }}"
+#   loop:
+#     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+#     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+#   # DNS Record Creation for hostname of container
+# - name: Create DNS Reconds on Cloudflare for this container
+#   cloudflare_dns:
+#     account_api_token: "{{ cloudflare.api }}"
+#     account_email: "{{ cloudflare.email }}"
+#     proxied: "yes"
+#     record: "{{ containers.statping.subdomain.1 }}"
+#     solo: "true"
+#     state: "present"
+#     type: "{{ item.type }}"
+#     value: "{{ item.value }}"
+#     zone: "{{ domain }}"
+#   loop:
+#     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+#     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+#   # Verify required directories with correct permissions are created
+# - name: check dir ownership
+#   file:
+#     recurse: yes
+#     path: "{{ directories.container_root }}/{{ item }}"
+#     owner: "{{ users.primary.user }}"
+#     group: "{{ users.primary.group }}"
+#     state: directory
+#     setype: container_file_t
+#   loop:
+#     - "{{ containers.statping.subdomain.0 }}"
+#     - "{{ containers.statping.subdomain.0/logs }}"
+
+  # Standup the container in inventory
+- name: Start StatPing
+  docker_container:
+    name: "{{ containers.statping.subdomain.0 }}"
+    hostname: "{{ containers.statping.subdomain.0 }}"
+    state: started
+    restart_policy: unless-stopped
+    image: statping/statping
+    # links: # Prevent container creation and startup until linked containers are running
+    #   - "{{ containers.mariadb.subdomain }}:{{ containers.mariadb.subdomain }}"
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    # volumes:
+    #   - "{{ directories.container_root }}/{{ containers.statping.subdomain.0 }}:/app:z"
+    # env:
+    #   ADMIN_EMAIL: "{{ mail.from_address }}"
+    #   ADMIN_PASSWORD: "{{ statping.password }}"
+    #   ADMIN_USER: "{{ statping.username }}"
+    #   DB_CONN: "mysql"
+    #   DB_HOST: "{{ containers.mariadb.subdomain }}"
+    #   DB_DATABASE: "{{ containers.statping.subdomain.0 }}"
+    #   DB_USER: "{{ containers.statping.subdomain.0 }}"
+    #   DB_PASS: " {{ mariadb.statping_passwd }}"
+    #   DB_PORT: "{{ containers.mariadb.port }}"
+    #   DESCRIPTION: "{{ statping.description }}"
+    #   DOMAIN: "{{ domain }}"
+    #   NAME: "{{ statping.name }}"
+    #   PREFIX: "{{ statping.prefix }}" # A Prefix for each value in Prometheus /metric exporter
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.statping.subdomain.0 }}"
+    purge_networks: yes
+    pull: true
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.statping-rtr.entrypoints: "https"
+      traefik.http.routers.statping-rtr.rule: "Host(`{{ containers.statping.subdomain.0 }}.{{ containers.statping.tld }}, {{ containers.statping.subdomain.1 }}.{{ containers.statping.tld }}`)"
+      traefik.http.routers.statping-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.statping-rtr.service: "statping-svc"
+      traefik.http.services.statping-svc.loadbalancer.server.port: "{{ containers.statping.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.statping-rtr.middlewares: "chain-oauth@file"
+...

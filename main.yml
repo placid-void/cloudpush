@@ -22,6 +22,7 @@
   # - docker-cadvisor
   # - docker-node-exporter
   # - docker-prometheus
+  - docker-statping
 
 # Starting Backend Services
   # - docker-alltube
