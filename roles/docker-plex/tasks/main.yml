@@ -47,8 +47,8 @@
       max-file: "3"
     # Mount required directories with the container
     volumes:
-      - "{{ directories.container_root }}/{{ containers.organizr.subdomain }}:/config:z"
-      - "/opt{{ directories.drive_root }}:{{ directories.drive_root }}:z"
+      - "{{ directories.container_root }}/{{ containers.plex.subdomain }}:/config:z"
+      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:z"
     env:
       PLEX_UID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PLEX_GID: "{{ users.primary.gid }}" # Pass proper GID to the container

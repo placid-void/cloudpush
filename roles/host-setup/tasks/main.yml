@@ -28,7 +28,7 @@
   #     setype: container_file_t
   #   loop:
   #     - "{{ directories.container_root }}"
-  #     - "{{ directories.data_dir}}"
+  #     - "{{ directories.host_data_dir}}"
 
   # - name: create all system groups
   #   group:

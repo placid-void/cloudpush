@@ -1,68 +1,68 @@
 ---
-#   # DNS Record Creation for hostname of container
-# - name: Create DNS Reconds on Cloudflare for this container
-#   cloudflare_dns:
-#     account_api_token: "{{ cloudflare.api }}"
-#     account_email: "{{ cloudflare.email }}"
-#     proxied: "yes"
-#     record: "{{ containers.nzbget.subdomain }}"
-#     solo: "true"
-#     state: "present"
-#     type: "{{ item.type }}"
-#     value: "{{ item.value }}"
-#     zone: "{{ domain }}"
-#   loop:
-#     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-#     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+  # DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns:
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.nzbget.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-#   # Verify required directories with correct permissions are created
-# - name: Check directory ownership
-#   file:
-#     recurse: yes
-#     path: "{{ directories.container_root }}/{{ item }}"
-#     owner: "{{ users.primary.user }}"
-#     group: "{{ users.primary.group }}"
-#     state: directory
-#     setype: container_file_t
-#   loop:
-#     - "{{ containers.nzbget.subdomain }}"
-#     - "{{ containers.nzbget.subdomain }}/cont-init.d"
-#     - "{{ containers.nzbget.subdomain }}/installer"
-#     - "{{ containers.nzbget.subdomain }}/nzbs"
-#     - "{{ containers.nzbget.subdomain }}/scripts"
-#     - "{{ containers.nzbget.subdomain }}/scripts/MP4_Automator"
-#     - "{{ containers.nzbget.subdomain }}/services.d"
+  # Verify required directories with correct permissions are created
+- name: Check directory ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "{{ containers.nzbget.subdomain }}"
+    - "{{ containers.nzbget.subdomain }}/cont-init.d"
+    - "{{ containers.nzbget.subdomain }}/installer"
+    - "{{ containers.nzbget.subdomain }}/nzbs"
+    - "{{ containers.nzbget.subdomain }}/scripts"
+    - "{{ containers.nzbget.subdomain }}/scripts/MP4_Automator"
+    - "{{ containers.nzbget.subdomain }}/services.d"
 
-#   # Verify required files with correct permissions are created
-# - name: Copy required files to container folders
-#   copy:
-#     src: "files/{{ item }}"
-#     dest: "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}/{{ item }}"
-#     owner: "{{ users.primary.user }}"
-#     group: "{{ users.primary.group }}"
-#     mode: 0550
-#   loop:
-#     - cont-init.d/30-config
-#     - installer/installer.sh
-#     - installer/web-install.sh
-#     - scripts/DeleteSamples.py
-#     - scripts/FakeDetector.py
-#     - scripts/Flatten.py
-#     - scripts/PasswordDetector.py
-#     - scripts/ReverseName.py
-#     - services.d/run
+  # Verify required files with correct permissions are created
+- name: Copy required files to container folders
+  copy:
+    src: "files/{{ item }}"
+    dest: "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0550
+  loop:
+    - cont-init.d/30-config
+    - installer/installer.sh
+    - installer/web-install.sh
+    - scripts/DeleteSamples.py
+    - scripts/FakeDetector.py
+    - scripts/Flatten.py
+    - scripts/PasswordDetector.py
+    - scripts/ReverseName.py
+    - services.d/run
 
-#   # Verify templated required files with correct permissions are created
-# - name: Template required container config files
-#   template:
-#     src: "templates/{{ item }}.j2"
-#     dest: "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}/{{ item }}"
-#     owner: "{{ users.primary.user }}"
-#     group: "{{ users.primary.group }}"
-#     mode: 0660
-#   loop:
-#     - "scripts/MP4_Automator/autoProcess.ini"
-#     - "nzbget.conf"
+  # Verify templated required files with correct permissions are created
+- name: Template required container config files
+  template:
+    src: "templates/{{ item }}.j2"
+    dest: "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0660
+  loop:
+    - "scripts/MP4_Automator/autoProcess.ini"
+    - "nzbget.conf"
 
   # Standup the container in inventory
 - name: Start NZBGet
@@ -82,7 +82,7 @@
     volumes:
       - "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}:/config:z"
       - "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}/cont-init.d/30-config:/etc/cont-init.d/30-config:z"
-      - "/opt{{ directories.data_dir }}:{{ directories.data_dir }}:z"
+      - "{{ directories.host_data_dir }}:{{ directories.data_dir }}:z"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container

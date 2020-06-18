@@ -26,9 +26,9 @@
     setype: container_file_t
   loop:
     - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}"
-    - "{{ directories.download_dir }}"
-    - "{{ directories.incomplete_dir }}"
-    - "{{ directories.data_dir }}/{{ directories.cache_dir }}"
+    - "/opt{{ directories.download_dir }}"
+    - "/opt{{ directories.incomplete_dir }}"
+    - "{{ directories.host_data_dir }}/{{ directories.cache_dir }}"
 
   # Verify templated required files with correct permissions are created
 - name: Adding Required Files
@@ -58,8 +58,8 @@
     # Mount required directories with the container
     volumes:
       - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}:/config/rclone:z"
-      - "/opt{{ directories.data_dir }}:{{ directories.data_dir }}:slave" # Mount data directory as slave
-      - "/opt{{ directories.drive_root }}:{{ directories.drive_root }}:shared" # Mount drive root directory as shared
+      - "{{ directories.host_data_dir }}:{{ directories.data_dir }}:slave" # Mount data directory as slave
+      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:shared" # Mount drive root directory as shared
       - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/fuse.conf:/etc/fuse.conf:z" # Force "allow_other" option for FUSE
       - "/etc/passwd:/etc/passwd:ro" # Required for FUSE to work correctly
       - "/etc/group:/etc/group:ro" # Required for FUSE to work correctly

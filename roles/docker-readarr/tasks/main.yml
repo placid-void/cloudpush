@@ -42,7 +42,7 @@
     # Mount required directories with the container
     volumes:
       - "{{ directories.container_root }}/{{ containers.readarr.subdomain }}:/config/app:z"
-      - "/opt{{ directories.data_dir }}:{{ directories.data_dir }}:z"
+      - "{{ directories.host_data_dir }}:{{ directories.data_dir }}:z"
     env:
       DEBUG: "yes"
       PUID: "{{ users.primary.uid }}"

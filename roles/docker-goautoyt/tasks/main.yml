@@ -51,7 +51,7 @@
     # Mount required directories with the container
     volumes:
       - "{{ directories.container_root }}/{{ containers.goautoyt.subdomain }}:/app/config:z"
-      - "/opt{{ directories.drive_root }}/Youtube:/app/downloads:z"
+      - "{{ directories.host_drive_root }}/Youtube:/app/downloads:z"
     volumes_from: "{{ containers.rclone.subdomain }}" # Include Data volume from Rclone container
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
