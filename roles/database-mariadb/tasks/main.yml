@@ -1,67 +1,83 @@
 ---
 # Database Creation
-  - name: add required databases
-    mysql_db:
-      name: 
-        - "{{ containers.bookstack.subdomain }}"
-        - "{{ containers.grafana.subdomain }}"
-        - "{{ containers.nextcloud.subdomain }}"
-        - "{{ containers.statping.subdomain.0 }}"
-      login_host: "localhost"
-      login_port: "{{ mariadb.login_port }}"
-      login_user: "{{ mariadb.login_user }}"
-      login_password: "{{ mariadb.mariadb_passwd }}"
-      state: present
+- name: add required databases
+  mysql_db:
+    encoding: "utf8"
+    login_host: "{{ containers.mariadb.subdomain }}"
+    login_password: "{{ mariadb.mariadb_passwd }}"
+    login_port: "{{ mariadb.login_port }}"
+    login_user: "{{ mariadb.login_user }}"
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ containers.bookstack.subdomain }}"
+    - "{{ containers.grafana.subdomain }}"
+    - "{{ containers.nextcloud.subdomain }}"
+    - "{{ containers.promgen.subdomain }}"
+    - "{{ containers.statping.subdomain.0 }}"
 
 # Bookstack User
-  - name: add bookstack user
-    mysql_user:
-      name: "{{ containers.bookstack.subdomain }}"
-      password: "{{ mariadb.bookstack_passwd }}"
-      host: "{{ containers.bookstack.subdomain }}.{{ networks.docker.primary.name }}"
-      priv: "{{ containers.bookstack.subdomain }}.*:ALL"
-      login_host: "localhost"
-      login_port: "{{ mariadb.login_port }}"
-      login_user: "{{ mariadb.login_user }}"
-      login_password: "{{ mariadb.mariadb_passwd }}"
-      state: present
+- name: add bookstack user
+  mysql_user:
+    host: "{{ containers.bookstack.subdomain }}.{{ networks.docker.primary.name }}"
+    login_host: "{{ containers.mariadb.subdomain }}"
+    login_password: "{{ mariadb.mariadb_passwd }}"
+    login_port: "{{ mariadb.login_port }}"
+    login_user: "{{ mariadb.login_user }}"
+    name: "{{ containers.bookstack.subdomain }}"
+    password: "{{ mariadb.bookstack_passwd }}"
+    priv: "{{ containers.bookstack.subdomain }}.*:ALL"
+    state: present
 
 # Grafana User
-  - name: add grafana user
-    mysql_user:
-      name: "{{ containers.grafana.subdomain }}"
-      password: "{{ mariadb.grafana_passwd }}"
-      host: "{{ containers.grafana.subdomain }}.{{ networks.docker.primary.name }}"
-      priv: "{{ containers.grafana.subdomain }}.*:ALL"
-      login_host: "localhost"
-      login_port: "{{ mariadb.login_port }}"
-      login_user: "{{ mariadb.login_user }}"
-      login_password: "{{ mariadb.mariadb_passwd }}"
-      state: present
+- name: add grafana user
+  mysql_user:
+    host: "{{ containers.grafana.subdomain }}.{{ networks.docker.primary.name }}"
+    login_host: "{{ containers.mariadb.subdomain }}"
+    login_password: "{{ mariadb.mariadb_passwd }}"
+    login_port: "{{ mariadb.login_port }}"
+    login_user: "{{ mariadb.login_user }}"
+    name: "{{ containers.grafana.subdomain }}"
+    password: "{{ mariadb.grafana_passwd }}"
+    priv: "{{ containers.grafana.subdomain }}.*:ALL"
+    state: present
 
 # NextCloud User
-  - name: add nextcloud user
-    mysql_user:
-      name: "{{ containers.nextcloud.subdomain }}"
-      password: "{{ mariadb.nextcloud_passwd }}"
-      host: "{{ containers.nextcloud.subdomain }}.{{ networks.docker.primary.name }}"
-      priv: "{{ containers.nextcloud.subdomain }}.*:ALL"
-      login_host: "localhost"
-      login_port: "{{ mariadb.login_port }}"
-      login_user: "{{ mariadb.login_user }}"
-      login_password: "{{ mariadb.mariadb_passwd }}"
-      state: present
+- name: add nextcloud user
+  mysql_user:
+    host: "{{ containers.nextcloud.subdomain }}.{{ networks.docker.primary.name }}"
+    login_host: "{{ containers.mariadb.subdomain }}"
+    login_password: "{{ mariadb.mariadb_passwd }}"
+    login_port: "{{ mariadb.login_port }}"
+    login_user: "{{ mariadb.login_user }}"
+    name: "{{ containers.nextcloud.subdomain }}"
+    password: "{{ mariadb.nextcloud_passwd }}"
+    priv: "{{ containers.nextcloud.subdomain }}.*:ALL"
+    state: present
+
+# PromGen User
+- name: add promgen user
+  mysql_user:
+    host: "{{ containers.promgen.subdomain }}.{{ networks.docker.primary.name }}"
+    login_host: "172.18.0.8"
+    login_password: "{{ mariadb.mariadb_passwd }}"
+    login_port: "{{ mariadb.login_port }}"
+    login_user: "{{ mariadb.login_user }}"
+    name: "{{ containers.promgen.subdomain }}"
+    password: "{{ mariadb.promgen_passwd }}"
+    priv: "{{ containers.promgen.subdomain }}.*:ALL"
+    state: present
 
 # StatPing User
-  - name: add statping user
-    mysql_user:
-      name: "{{ containers.statping.subdomain.0 }}"
-      password: "{{ mariadb.statping_passwd }}"
-      # host: "{{ containers.statping.subdomain.0 }}.{{ networks.docker.primary.name }}"
-      priv: "{{ containers.statping.subdomain.0 }}.*:ALL"
-      login_host: "localhost"
-      login_port: "{{ mariadb.login_port }}"
-      login_user: "{{ mariadb.login_user }}"
-      login_password: "{{ mariadb.mariadb_passwd }}"
-      state: present
+- name: add statping user
+  mysql_user:
+    host: "{{ containers.statping.subdomain.0 }}.{{ networks.docker.primary.name }}"
+    login_host: "172.18.0.8"
+    login_password: "{{ mariadb.mariadb_passwd }}"
+    login_port: "{{ mariadb.login_port }}"
+    login_user: "{{ mariadb.login_user }}"
+    name: "{{ containers.statping.subdomain.0 }}"
+    password: "{{ mariadb.statping_passwd }}"
+    priv: "{{ containers.statping.subdomain.0 }}.*:ALL"
+    state: present
 ...
