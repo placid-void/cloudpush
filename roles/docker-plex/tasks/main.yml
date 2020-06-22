@@ -5,7 +5,23 @@
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
-    record: "{{ containers.plex.subdomain }}"
+    record: "{{ containers.plex.subdomain.0 }}" # Plex Server Subdomain
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns:
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.plex.subdomain.1 }}" # Plex WebTools Subdomain
     solo: "true"
     state: "present"
     type: "{{ item.type }}"
@@ -19,7 +35,7 @@
 - name: check dir ownership
   file:
     recurse: yes
-    path: "{{ directories.container_root }}/{{ containers.plex.subdomain }}/"
+    path: "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}/"
     owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
     state: directory
@@ -34,8 +50,8 @@
   # Standup the container in inventory
 - name: Start Plex
   docker_container:
-    name: "{{ containers.plex.subdomain }}"
-    hostname: "{{ containers.plex.subdomain }}"
+    name: "{{ containers.plex.subdomain.0 }}"
+    hostname: "{{ containers.plex.subdomain.0 }}"
     state: started
     restart_policy: unless-stopped
     image: plexinc/pms-docker
@@ -47,7 +63,7 @@
       max-file: "3"
     # Mount required directories with the container
     volumes:
-      - "{{ directories.container_root }}/{{ containers.plex.subdomain }}:/config:z"
+      - "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}:/config:z"
       - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:z"
     env:
       PLEX_UID: "{{ users.primary.uid }}" # Pass proper UID to the container
@@ -65,7 +81,7 @@
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"
-        aliases: "{{ containers.plex.subdomain }}"
+        aliases: "{{ containers.plex.subdomain.0 }}"
     purge_networks: yes
     pull: true
     labels:
@@ -75,11 +91,20 @@
       traefik.enable: "true"
       ## HTTP Routers
       traefik.http.routers.plex-rtr.entrypoints: "https"
-      traefik.http.routers.plex-rtr.rule: "Host(`{{ containers.plex.subdomain }}.{{ containers.plex.tld }}`)"
+      traefik.http.routers.plex-rtr.rule: "Host(`{{ containers.plex.subdomain.0 }}.{{ containers.plex.tld }}`)"
       traefik.http.routers.plex-rtr.tls: "true"
       ## HTTP Services
       traefik.http.routers.plex-rtr.service: "plex-svc"
-      traefik.http.services.plex-svc.loadbalancer.server.port: "{{ containers.plex.port | default('80') }}"
+      traefik.http.services.plex-svc.loadbalancer.server.port: "{{ containers.plex.port.0 | default('80') }}"
       ## Middlewares
       traefik.http.routers.plex-rtr.middlewares: "chain-no-auth@file"
+      ## HTTP Routers
+      traefik.http.routers.plex-tools-rtr.entrypoints: "https"
+      traefik.http.routers.plex-tools-rtr.rule: "Host(`{{ containers.plex.subdomain.1 }}.{{ containers.plex.tld }}`)"
+      traefik.http.routers.plex-tools-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.plex-tools-rtr.service: "plex-tools-svc"
+      traefik.http.services.plex-tools-svc.loadbalancer.server.port: "{{ containers.plex.port.1 | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.plex-tools-rtr.middlewares: "chain-oauth@file"
 ...
