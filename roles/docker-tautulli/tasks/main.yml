@@ -49,7 +49,7 @@
     restart_policy: unless-stopped
     image: linuxserver/tautulli
     links: # Prevent container creation and startup until linked containers are running
-    - "{{ containers.plex.subdomain }}:{{ containers.plex.subdomain }}"
+    - "{{ containers.plex.subdomain.0 }}:{{ containers.plex.subdomain.0 }}"
     log_driver: "json-file"
     log_options:
       max-size: "12m"
@@ -58,7 +58,7 @@
     volumes:
       - "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}:/config:z"
       - "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/scripts/99-requests.sh:/etc/cont-init.d/99-requests.sh:z"
-      - "{{ directories.container_root }}/{{ containers.plex.subdomain }}/Library/Application Support/Plex Media Server/Logs:/logs:ro" # Mount Plex Server logs
+      - "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}/Library/Application Support/Plex Media Server/Logs:/logs:ro" # Mount Plex Server logs
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container

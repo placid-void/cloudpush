@@ -40,7 +40,7 @@
     restart_policy: unless-stopped
     image: starbix/synclounge
     links: # Prevent container creation and startup until linked containers are running 
-    - "{{ containers.plex.subdomain }}:{{ containers.plex.subdomain }}"
+    - "{{ containers.plex.subdomain.0 }}:{{ containers.plex.subdomain.0 }}"
     log_driver: "json-file"
     log_options:
       max-size: "12m"

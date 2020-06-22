@@ -60,7 +60,7 @@
     image: grafana/grafana
     links: # Prevent container creation and startup until linked containers are running
       - "{{ containers.influxdb.subdomain }}:{{ containers.influxdb.subdomain }}"
-      - "{{ containers.plex.subdomain }}:{{ containers.plex.subdomain }}"
+      - "{{ containers.plex.subdomain.0 }}:{{ containers.plex.subdomain.0 }}"
       - "{{ containers.prometheus.subdomain }}:{{ containers.prometheus.subdomain }}"
     log_driver: "json-file"
     log_options:
