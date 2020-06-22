@@ -1,0 +1,82 @@
+---
+# Database Creation
+- name: add required databases
+  postgresql_db:
+    login_host: "{{ containers.mariadb.subdomain }}"
+    login_password: "{{ postgresql.postgresql_passwd }}"
+    login_user: "{{ postgresql.login_user }}"
+    name: "{{ item }}"
+    port: "{{ postgresql.login_port }}"
+    state: present
+  loop: 
+    - "{{ containers.bookstack.subdomain }}"
+    - "{{ containers.grafana.subdomain }}"
+    - "{{ containers.nextcloud.subdomain }}"
+    - "{{ containers.promgen.subdomain }}"
+    - "{{ containers.statping.subdomain.0 }}"
+
+# Bookstack User
+- name: add bookstack user
+  postgresql_user:
+    db: "{{ containers.bookstack.subdomain }}"
+    login_host: "{{ containers.mariadb.subdomain }}"
+    login_password: "{{ postgresql.postgresql_passwd }}"
+    login_user: "{{ postgresql.login_user }}"
+    name: "{{ containers.bookstack.subdomain }}"
+    password: "{{ postgresql.bookstack_passwd }}"
+    priv: "{{ containers.bookstack.subdomain }}.*:ALL"
+    port: "{{ postgresql.login_port }}"
+    state: present
+
+# Grafana User
+- name: add grafana user
+  postgresql_user:
+    db: "{{ containers.grafana.subdomain }}"
+    login_host: "{{ containers.mariadb.subdomain }}"
+    login_password: "{{ postgresql.postgresql_passwd }}"
+    login_user: "{{ postgresql.login_user }}"
+    name: "{{ containers.grafana.subdomain }}"
+    password: "{{ postgresql.grafana_passwd }}"
+    priv: "{{ containers.grafana.subdomain }}.*:ALL"
+    port: "{{ postgresql.login_port }}"
+    state: present
+
+# NextCloud User
+- name: add nextcloud user
+  postgresql_user:
+    db: "{{ containers.nextcloud.subdomain }}"
+    login_host: "{{ containers.mariadb.subdomain }}"
+    login_password: "{{ postgresql.postgresql_passwd }}"
+    login_user: "{{ postgresql.login_user }}"
+    name: "{{ containers.nextcloud.subdomain }}"
+    password: "{{ postgresql.nextcloud_passwd }}"
+    priv: "{{ containers.nextcloud.subdomain }}.*:ALL"
+    port: "{{ postgresql.login_port }}"
+    state: present
+
+# PromGen User
+- name: add promgen user
+  postgresql_user:
+    db: "{{ containers.promgen.subdomain }}"
+    login_host: "{{ containers.mariadb.subdomain }}"
+    login_password: "{{ postgresql.postgresql_passwd }}"
+    login_user: "{{ postgresql.login_user }}"
+    name: "{{ containers.promgen.subdomain }}"
+    password: "{{ postgresql.promgen_passwd }}"
+    priv: "{{ containers.promgen.subdomain }}.*:ALL"
+    port: "{{ postgresql.login_port }}"
+    state: present
+
+# StatPing User
+- name: add statping user
+  postgresql_user:
+    db: "{{ containers.statping.subdomain.0 }}"
+    login_host: "{{ containers.mariadb.subdomain }}"
+    login_password: "{{ postgresql.postgresql_passwd }}"
+    login_user: "{{ postgresql.login_user }}"
+    name: "{{ containers.statping.subdomain.0 }}"
+    password: "{{ postgresql.statping_passwd }}"
+    priv: "{{ containers.statping.subdomain.0 }}.*:ALL"
+    port: "{{ postgresql.login_port }}"
+    state: present
+...

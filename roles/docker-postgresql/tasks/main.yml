@@ -1,0 +1,60 @@
+---
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "{{ containers.postgresql.subdomain }}"
+    - "{{ containers.postgresql.subdomain }}/data"
+
+  # Verify templated required files with correct permissions are created
+- name: Template required container config files
+  template:
+    src: "templates/{{ item }}.j2"
+    dest: "{{ directories.container_root }}/{{ containers.postgresql.subdomain }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0660
+  loop:
+    - "postgresql.conf"
+
+  # Standup the container in inventory
+- name: Start PostgreSQL
+  docker_container:
+    name: "{{ containers.postgresql.subdomain }}"
+    hostname: "{{ containers.postgresql.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: postgres
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.postgresql.subdomain }}postgresql.conf:/etc/postgresql/postgresql.conf:z"
+      - "{{ directories.container_root }}/{{ containers.postgresql.subdomain }}/data:/var/lib/postgresql/data:z"
+      - "/etc/passwd:/etc/passwd:ro" # Required for custom user to work correctly
+    ports:
+      - "{{ mariadb.login_port }}:{{ mariadb.login_port }}/tcp"
+    env:
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      POSTGRES_PASSWORD: "{{ postgresql.postgresql_passwd }}" # PostgreSQL Root Password
+    # PostgreSQL user details
+    user: "{{ users.primary.uid }}:{{ users.primary.gid }}"
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.postgresql.subdomain }}"
+    purge_networks: yes
+    pull: true
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+...
