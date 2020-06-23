@@ -1,38 +1,38 @@
 ---
-  # DNS Record Creation for hostname of container
-- name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns:
-    account_api_token: "{{ cloudflare.api }}"
-    account_email: "{{ cloudflare.email }}"
-    proxied: "yes"
-    record: "{{ containers.sonarr4k.subdomain }}"
-    solo: "true"
-    state: "present"
-    type: "{{ item.type }}"
-    value: "{{ item.value }}"
-    zone: "{{ domain }}"
-  loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+#   # DNS Record Creation for hostname of container
+# - name: Create DNS Reconds on Cloudflare for this container
+#   cloudflare_dns:
+#     account_api_token: "{{ cloudflare.api }}"
+#     account_email: "{{ cloudflare.email }}"
+#     proxied: "yes"
+#     record: "{{ containers.sonarr4k.subdomain }}"
+#     solo: "true"
+#     state: "present"
+#     type: "{{ item.type }}"
+#     value: "{{ item.value }}"
+#     zone: "{{ domain }}"
+#   loop:
+#     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+#     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # Verify required directories with correct permissions are created
-- name: check dir ownership
-  file:
-    recurse: yes
-    path: "{{ directories.container_root }}/{{ containers.sonarr4k.subdomain }}"
-    owner: "{{ users.primary.user }}"
-    group: "{{ users.primary.group }}"
-    state: directory
-    setype: container_file_t
+#   # Verify required directories with correct permissions are created
+# - name: check dir ownership
+#   file:
+#     recurse: yes
+#     path: "{{ directories.container_root }}/{{ containers.sonarr4k.subdomain }}"
+#     owner: "{{ users.primary.user }}"
+#     group: "{{ users.primary.group }}"
+#     state: directory
+#     setype: container_file_t
 
-  # Verify templated required files with correct permissions are created
-- name: Adding Required Files
-  template:
-    src: "templates/config.xml.j2"
-    dest: "{{ directories.container_root }}/{{ containers.sonarr4k.subdomain }}/config.xml"
-    owner: "{{ users.primary.user }}"
-    group: "{{ users.primary.group }}"
-    mode: 0660
+#   # Verify templated required files with correct permissions are created
+# - name: Adding Required Files
+#   template:
+#     src: "templates/config.xml.j2"
+#     dest: "{{ directories.container_root }}/{{ containers.sonarr4k.subdomain }}/config.xml"
+#     owner: "{{ users.primary.user }}"
+#     group: "{{ users.primary.group }}"
+#     mode: 0660
 
   # Standup the container in inventory
 - name: Start Sonarr4k
@@ -41,7 +41,7 @@
     hostname: "{{ containers.sonarr4k.subdomain }}"
     state: started
     restart_policy: unless-stopped
-    image: linuxserver/sonarr
+    image: linuxserver/sonarr:preview
     links: # Prevent container creation and startup until linked containers are running
     - "{{ containers.nzbget.subdomain }}:{{ containers.nzbget.subdomain }}"
     log_driver: "json-file"

@@ -16,13 +16,20 @@
 # Required Roles for other containers
   # - docker-mariadb
   # - database-mariadb
+  # - docker-postgresql
+  # - database-postgresql
   # - docker-portainer
   # - docker-influxdb
   # - docker-traefik
   # - docker-cadvisor
   # - docker-node-exporter
+  # - docker-statping
   # - docker-prometheus
-  - docker-statping
+  # - docker-promgen
+  # - docker-asf
+  # - docker-cloudbeaver
+  # - docker-grafana
+  # - docker-varken
 
 # Starting Backend Services
   # - docker-alltube
@@ -46,19 +53,17 @@
   # - docker-bazarr4k
   # - docker-plex
   # - docker-tautulli
-  # - docker-embystat
-  # - docker-cloudbeaver
   # - docker-synclounge
   # - docker-ombi
   # - docker-ombi4k
   # - docker-organizr
   # - docker-mellow
   # - docker-traktarr
-  # - docker-grafana
-  # - docker-varken
   # - docker-tdarr
   # - docker-emby
+  # - docker-embystat
   # - docker-jellyfin
+  # - docker-jellyfinstat
 
 # Not implemented fully yet
   # - docker-readarr
