@@ -462,7 +462,7 @@ DaemonUsername={{ users.primary.user }}
 # command).
 # Empty value or value "1000" disables the setting of umask-mode; current
 # umask-mode (set via shell) is used in this case.
-UMask=003
+UMask={{ mount_options.umask }}
 
 
 ##############################################################################
