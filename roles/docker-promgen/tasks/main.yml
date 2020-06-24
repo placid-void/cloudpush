@@ -1,0 +1,96 @@
+---
+  # DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns:
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.promgen.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "{{ containers.promgen.subdomain }}"
+
+  # Verify templated required files with correct permissions are created
+- name: Adding Required Files
+  template:
+    src: "templates/{{ item }}.j2"
+    dest: "{{ directories.container_root }}/{{ containers.promgen.subdomain }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0660
+  loop:
+    - "promgen.yml"
+
+  # Verify required files with correct permissions are created
+- name: Creating Required Files
+  file:
+    path: "{{ directories.container_root }}/{{ containers.promgen.subdomain }}/{{ item }}"
+    state: touch
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0600
+  loop:
+    - "blackbox.json"
+    - "promgen.json"
+    - "promgen.rule.yml"
+
+  # Standup the container in inventory
+- name: Start Promgen
+  docker_container:
+    name: "{{ containers.promgen.subdomain }}"
+    hostname: "{{ containers.promgen.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: line/promgen
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.promgen.subdomain }}:/config:z"
+    env: 
+      ALLOWED_HOSTS: "{{ containers.promgen.subdomain }}.{{ containers.promgen.tld }}"
+      CELERY_BROKER_URL: "redis://{{ redis.username }}:{{ redis.password }}@{{ containers.redis.subdomain }}:{{ containers.redis.port }}/0"
+      DATABASE_URL: "mysql://{{ containers.promgen.subdomain }}:{{ mariadb.promgen_passwd }}@{{ containers.mariadb.subdomain }}:{{ containers.mariadb.port }}/{{ containers.promgen.subdomain }}"
+      SECRET_KEY: "{{ redis.secret_key }}"
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.promgen.subdomain }}"
+    # Promgen user details
+    user: "{{ users.primary.uid }}:{{ users.primary.gid }}"
+    purge_networks: yes
+    pull: true
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.promgen-rtr.entrypoints: "https"
+      traefik.http.routers.promgen-rtr.rule: "Host(`{{ containers.promgen.subdomain }}.{{ containers.promgen.tld }}`)"
+      traefik.http.routers.promgen-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.promgen-rtr.service: "promgen-svc"
+      traefik.http.services.promgen-svc.loadbalancer.server.port: "{{ containers.promgen.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.promgen-rtr.middlewares: "chain-oauth@file"
+...
