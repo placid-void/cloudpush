@@ -1,0 +1,53 @@
+---
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "{{ containers.redis.subdomain }}/data"
+
+  # Verify templated required files with correct permissions are created
+- name: Adding Required Files
+  template:
+    src: "templates/{{ item }}.j2"
+    dest: "{{ directories.container_root }}/{{ containers.redis.subdomain }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0660
+  loop:
+    - "redis.conf"
+
+  # Standup the container in inventory
+- name: Start Redis
+  docker_container:
+    name: "{{ containers.redis.subdomain }}"
+    hostname: "{{ containers.redis.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: redis:alpine
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.redis.subdomain }}/redis.conf:/usr/local/etc/redis/redis.conf:z"
+      - "{{ directories.container_root }}/{{ containers.redis.subdomain }}/data:/data:z"
+    env:
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.redis.subdomain }}"
+    purge_networks: yes
+    pull: true
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+...
