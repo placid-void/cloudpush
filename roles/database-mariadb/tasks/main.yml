@@ -3,18 +3,20 @@
 - name: add required databases
   mysql_db:
     encoding: "utf8"
-    login_host: "{{ containers.mariadb.subdomain }}"
+    login_host: "172.18.0.8"
+    # login_host: "{{ containers.mariadb.subdomain }}"
     login_password: "{{ mariadb.mariadb_passwd }}"
     login_port: "{{ mariadb.login_port }}"
     login_user: "{{ mariadb.login_user }}"
     name: "{{ item }}"
-    state: present
+    state: absent
   loop:
-    - "{{ containers.bookstack.subdomain }}"
-    - "{{ containers.grafana.subdomain }}"
-    - "{{ containers.nextcloud.subdomain }}"
-    - "{{ containers.promgen.subdomain }}"
-    - "{{ containers.statping.subdomain.0 }}"
+    # - "{{ containers.bookstack.subdomain }}"
+    # - "{{ containers.grafana.subdomain }}"
+    # - "{{ containers.nextcloud.subdomain }}"
+    # - "{{ containers.promgen.subdomain }}"
+    # - "{{ containers.statping.subdomain.0 }}"
+  no_log: true # Don't log output to Ansible logs, due to sensitive data
 
 # Bookstack User
 - name: add bookstack user
@@ -28,6 +30,22 @@
     password: "{{ mariadb.bookstack_passwd }}"
     priv: "{{ containers.bookstack.subdomain }}.*:ALL"
     state: present
+  no_log: true # Don't log output to Ansible logs, due to sensitive data
+
+# Cloudbeaver User
+- name: add cloudbeaver user
+  mysql_user:
+    host: "{{ containers.cloudbeaver.subdomain }}.{{ networks.docker.primary.name }}"
+    login_host: "172.18.0.8"
+    # login_host: "{{ containers.mariadb.subdomain }}"
+    login_password: "{{ mariadb.mariadb_passwd }}"
+    login_port: "{{ mariadb.login_port }}"
+    login_user: "{{ mariadb.login_user }}"
+    name: "{{ containers.cloudbeaver.subdomain }}"
+    password: "{{ mariadb.cloudbeaver_passwd }}"
+    priv: "*.*:ALL"
+    state: present
+  no_log: true # Don't log output to Ansible logs, due to sensitive data
 
 # Grafana User
 - name: add grafana user
@@ -41,6 +59,7 @@
     password: "{{ mariadb.grafana_passwd }}"
     priv: "{{ containers.grafana.subdomain }}.*:ALL"
     state: present
+  no_log: true # Don't log output to Ansible logs, due to sensitive data
 
 # NextCloud User
 - name: add nextcloud user
@@ -54,6 +73,7 @@
     password: "{{ mariadb.nextcloud_passwd }}"
     priv: "{{ containers.nextcloud.subdomain }}.*:ALL"
     state: present
+  no_log: true # Don't log output to Ansible logs, due to sensitive data
 
 # PromGen User
 - name: add promgen user
@@ -67,6 +87,7 @@
     password: "{{ mariadb.promgen_passwd }}"
     priv: "{{ containers.promgen.subdomain }}.*:ALL"
     state: present
+  no_log: true # Don't log output to Ansible logs, due to sensitive data
 
 # StatPing User
 - name: add statping user
@@ -80,4 +101,5 @@
     password: "{{ mariadb.statping_passwd }}"
     priv: "{{ containers.statping.subdomain.0 }}.*:ALL"
     state: present
+  no_log: true # Don't log output to Ansible logs, due to sensitive data
 ...

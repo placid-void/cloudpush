@@ -1,7 +1,7 @@
 {
     server: {
-        serverPort: 8978,
-        serverName: "CloudBeaver",
+        serverPort: {{ containers.cloudbeaver.port }},
+        serverName: "{{ domain }} Cloudbeaver Server",
 
         workspaceLocation: "workspace",
         contentRoot: "web",
@@ -17,12 +17,12 @@
         develMode: false,
 
         database: {
-            driver="h2_embedded",
+            driver: "h2_embedded",
             url: "jdbc:h2:${workspace}/.data/cb.h2.dat",
             // For embedded database it will be the primary user name/password
             // IMPORTANT! To avoid security hole change this password before the first server start
-            user: "cb-data",
-            password: "cb-data",
+            user: "{{ containers.cloudbeaver.subdomain }}",
+            password: "{{ mariadb.cloudbeaver_passwd }}",
 
             createDatabase: true,
 
@@ -38,9 +38,10 @@
 
     },
     app: {
-        anonymousAccessEnabled: false,
-        anonymousUserRole: "user",
-        supportsCustomConnections: false
+        anonymousAccessEnabled: true,
+        authenticationEnabled: true,
+        anonymousUserRole: "admin",
+        supportsCustomConnections: true
 
         /*
         enabledDrivers: [
@@ -48,7 +49,6 @@
             "mysql:mysql8",
             "mysql:mariaDB",
             "generic:sqlite_jdbc",
-            "generic:derby_server",
             "generic:h2_embedded",
             "jaybird:jaybird",
         ]

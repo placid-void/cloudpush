@@ -26,7 +26,7 @@
   # - docker-node-exporter
   # - docker-statping
   # - docker-prometheus
-  - docker-promgen
+  # - docker-promgen
   # - docker-asf
   # - docker-cloudbeaver
   # - docker-grafana

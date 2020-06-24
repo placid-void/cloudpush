@@ -1,57 +1,48 @@
 ---
 # https://github.com/dbeaver/cloudbeaver
-#   # DNS Record Creation for hostname of container
-# - name: Create DNS Reconds on Cloudflare for this container
-#   cloudflare_dns:
-#     account_api_token: "{{ cloudflare.api }}"
-#     account_email: "{{ cloudflare.email }}"
-#     proxied: "yes"
-#     record: "{{ containers.cloudbeaver.subdomain }}"
-#     solo: "true"
-#     state: "present"
-#     type: "{{ item.type }}"
-#     value: "{{ item.value }}"
-#     zone: "{{ domain }}"
-#   loop:
-#     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-#     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+  # DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns:
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.cloudbeaver.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-#   # Verify required directories with correct permissions are created
-# - name: check dir ownership
-#   file:
-#     recurse: yes
-#     path: "{{ directories.container_root }}/{{ item }}"
-#     owner: "{{ users.primary.user }}"
-#     group: "{{ users.primary.group }}"
-#     state: directory
-#     setype: container_file_t
-#   loop:
-#     - "{{ containers.cloudbeaver.subdomain }}"
-#     - "{{ containers.cloudbeaver.subdomain }}/conf"
-#     - "{{ containers.cloudbeaver.subdomain }}/workspace/GlobalConfiguration/.dbeaver"
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "{{ containers.cloudbeaver.subdomain }}"
 
-#   # Verify templated required files with correct permissions are created
-# - name: Adding Required Files
-#   template:
-#     src: "templates/{{ item }}.j2"
-#     dest: "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/{{ item }}"
-#     owner: "{{ users.primary.user }}"
-#     group: "{{ users.primary.group }}"
-#     mode: 0660
-#   loop: 
-#     # - "conf/cloudbeaver.conf"
-#     # - "conf/product.conf"
-#     # - "conf/initial-data.conf"
-#     - "workspace/GlobalConfiguration/.dbeaver/data-sources.json"
-
-#   # Verify templated required files with correct permissions are created
-# - name: Adding Required Files
-#   template:
-#     src: "templates/data-sources.json.j2"
-#     dest: "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/workspace/GlobalConfiguration/.dbeaver/data-sources.json"
-#     owner: "{{ users.primary.user }}"
-#     group: "{{ users.primary.group }}"
-#     mode: 0660
+  # Verify templated required files with correct permissions are created
+- name: Adding Required Files
+  template:
+    src: "templates/{{ item }}.j2"
+    dest: "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/{{ item }}"
+    owner: "root"
+    group: "root"
+    # owner: "{{ users.primary.user }}"
+    # group: "{{ users.primary.group }}"
+    mode: 0660
+  loop: 
+    - "cloudbeaver.conf"
+    - "data-sources.json"
+    - "initial-data.conf"
+    - "product.conf"
 
   # Standup the container in inventory
 - name: Start CloudBeaver
@@ -69,28 +60,24 @@
       max-file: "3"
     # Mount required directories with the container
     volumes:
-      - "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/conf/cloudbeaver.conf:/app/conf/cloudbeaver.conf:z"
-      - "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/conf/initial-data.conf:/app/conf/initial-data.conf:z"
-      - "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/conf/product.conf:/app/conf/product.conf:z"
-      - "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/workspace/GlobalConfiguration/.dbeaver/data-sources.conf:/app/workspace/GlobalConfiguration/.dbeaver/data-sources.conf:z"
+      - "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/cloudbeaver.conf:/app/conf/cloudbeaver.conf:z"
+      - "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/initial-data.conf:/app/conf/initial-data.conf:z"
+      - "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/product.conf:/app/conf/product.conf:z"
+      - "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/data-sources.json:/app/workspace/GlobalConfiguration/.dbeaver/data-sources.json:z"
       - "{{ directories.container_root }}/{{ containers.bazarr.subdomain }}/db/bazarr.db:/app/workspace/GlobalConfiguration/db/bazarr.db:z"
       - "{{ directories.container_root }}/{{ containers.bazarr4k.subdomain }}/db/bazarr.db:/app/workspace/GlobalConfiguration/db/bazarr4k.db:z"
       - "{{ directories.container_root }}/{{ containers.emby.subdomain }}/data/library.db:/app/workspace/GlobalConfiguration/db/emby.db:z"
-      - "{{ directories.container_root }}/{{ containers.jellyfin.subdomain }}/data/data/library.db:/app/workspace/GlobalConfiguration/db/jellyfin.db:z"
       - "{{ directories.container_root }}/{{ containers.lazylibrarian.subdomain }}/lazylibrarian.db:/app/workspace/GlobalConfiguration/db/lazylibrarian.db:z"
       - "{{ directories.container_root }}/{{ containers.lidarr.subdomain }}/lidarr.db:/app/workspace/GlobalConfiguration/db/lidarr.db:z"
       - "{{ directories.container_root }}/{{ containers.mylar.subdomain }}/mylar/mylar.db:/app/workspace/GlobalConfiguration/db/mylar.db:z"
       - "{{ directories.container_root }}/{{ containers.ombi.subdomain }}/Ombi.db:/app/workspace/GlobalConfiguration/db/ombi.db:z"
       - "{{ directories.container_root }}/{{ containers.ombi4k.subdomain }}/Ombi.db:/app/workspace/GlobalConfiguration/db/ombi4k.db:z"
-      - "{{ directories.container_root }}/{{ containers.plex.subdomain }}/Library/Application Support/Plex Media Server/Plug-in Support/Databases/com.plexapp.plugins.library.db:/app/workspace/GlobalConfiguration/db/plex.db:z"
+      - "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}/Library/Application Support/Plex Media Server/Plug-in Support/Databases/com.plexapp.plugins.library.db:/app/workspace/GlobalConfiguration/db/plex.db:z"
       - "{{ directories.container_root }}/{{ containers.radarr.subdomain }}/nzbdrone.db:/app/workspace/GlobalConfiguration/db/radarr.db:z"
       - "{{ directories.container_root }}/{{ containers.radarr4k.subdomain }}/nzbdrone.db:/app/workspace/GlobalConfiguration/db/radarr4k.db:z"
       - "{{ directories.container_root }}/{{ containers.sonarr.subdomain }}/nzbdrone.db:/app/workspace/GlobalConfiguration/db/sonarr.db:z"
       - "{{ directories.container_root }}/{{ containers.sonarr4k.subdomain }}/nzbdrone.db:/app/workspace/GlobalConfiguration/db/sonarr4k.db:z"
       - "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/tautulli.db:/app/workspace/GlobalConfiguration/db/tautulli.db:z"
-    env:
-      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
-      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"
