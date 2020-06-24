@@ -184,7 +184,7 @@ alias superfind='find -empty -type d -delete'
 #tail Drive Log
 alias drive='docker logs -f --tail 10 {{ containers.rclone.subdomain }}'
 #fix plex db
-alias plexdb='sqlite3 {{ directories.container_root }}/{{ containers.plex.subdomain }}/Library/Application\ Support/Plex\ Media\ Server/Plug-in\ Support/Databases/com.plexapp.plugins.library.db "UPDATE metadata_items set deleted_at=null"'
+alias plexdb='sqlite3 {{ directories.container_root }}/{{ containers.plex.subdomain.0 }}/Library/Application\ Support/Plex\ Media\ Server/Plug-in\ Support/Databases/com.plexapp.plugins.library.db "UPDATE metadata_items set deleted_at=null"'
 
 # User specific aliases and functions
 PATH=$PATH:$HOME/.bin:$HOME/bin:$HOME/.local/bin:/usr/bin
