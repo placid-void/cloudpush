@@ -231,6 +231,7 @@
   #     - rar
   #     - screen
   #     - smartmontools
+  #     - sysfsutils
   #     - sysstat
   #     - tmux
   #     - toilet
@@ -364,4 +365,24 @@
   #     state: enabled
   #     policy: deny
   #     logging: on 
+
+# - name: Modify kernel domainname
+#   lineinfile:
+#     path: /etc/sysfs.conf
+#     regexp: '^#kernel.domainname = example.com'
+#     line: "kernel.domainname = {{ domain i}"
+
+# - name: Modify overcommit_memory settings
+#   lineinfile:
+#     path: /etc/sysctl.conf
+#     line: "vm.overcommit_memory=1"
+
+# - name: Disable Transparent Hugepages
+#   lineinfile:
+#     path: /etc/sysfs.conf
+#     regexp: '^kernel\/mm\/transparent\_hugepage\/enabled'
+#     line: "kernel/mm/transparent_hugepage/enabled = never"
+
+# - name: disable transparent huge pages for redis performance - live change
+#   shell: echo never {{ ">" }} /sys/kernel/mm/transparent_hugepage/enabled
 ...
