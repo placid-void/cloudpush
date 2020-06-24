@@ -1,0 +1,82 @@
+---
+  # DNS Record Creation for hostname of container
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns:
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.asf.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+
+  # Verify required directories with correct permissions are created
+- name: check dir ownership
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "{{ containers.asf.subdomain }}"
+
+  # Verify templated required files with correct permissions are created
+- name: Adding Required Files
+  template:
+    src: "templates/{{ item }}.j2"
+    dest: "{{ directories.container_root }}/{{ containers.asf.subdomain }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0660
+  loop:
+    - ""
+
+  # Standup the container in inventory
+- name: Start Alertmanager SNS Forwarder
+  docker_container:
+    name: "{{ containers.asf.subdomain }}"
+    hostname: "{{ containers.asf.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: datareply/alertmanager-sns-forwarder
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    # Mount required directories with the container
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.asf.subdomain }}:/config:z"
+    env:
+      AWS_REGION: ""
+      AWS_SDK_LOAD_CONFIG: ""
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      SNS_FORWARDER_TEMPLATE_PATH: "/config"
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ networks.docker.primary.name }}"
+        aliases: "{{ containers.asf.subdomain }}"
+    purge_networks: yes
+    pull: true
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+      ## Enable Traefik
+      traefik.enable: "true"
+      ## HTTP Routers
+      traefik.http.routers.asf-rtr.entrypoints: "https"
+      traefik.http.routers.asf-rtr.rule: "Host(`{{ containers.asf.subdomain }}.{{ containers.asf.tld }}`)"
+      traefik.http.routers.asf-rtr.tls: "true"
+      ## HTTP Services
+      traefik.http.routers.asf-rtr.service: "asf-svc"
+      traefik.http.services.asf-svc.loadbalancer.server.port: "{{ containers.asf.port | default('80') }}"
+      ## Middlewares
+      traefik.http.routers.asf-rtr.middlewares: "chain-oauth@file"
+...
