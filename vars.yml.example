@@ -47,9 +47,24 @@ containers:
   #   network: www
   #
   # Domain Hosts
+  adminer:
+    network: "{{ networks.docker.primary.name }}"
+    port: "8080"
+    subdomain: "adminer"
+    tld: "{{ domain }}"
+  alertmanager:
+    network: "{{ networks.docker.primary.name }}"
+    port: "9093"
+    subdomain: "alertmanager"
+    tld: "{{ domain }}"
   alltube:
     network: "{{ networks.docker.primary.name }}"
     subdomain: "alltube"
+    tld: "{{ domain }}"
+  asf:
+    network: "{{ networks.docker.primary.name }}"
+    port: "9087"
+    subdomain: "asf"
     tld: "{{ domain }}"
   bazarr:
     network: "{{ networks.docker.primary.name }}"
@@ -240,6 +255,11 @@ containers:
     network: "{{ networks.docker.primary.name }}"
     port: "8787"
     subdomain: "readarr"
+    tld: "{{ domain }}"
+  redis:
+    network: "{{ networks.docker.primary.name }}"
+    port: "6379"
+    subdomain: "redis"
     tld: "{{ domain }}"
   sonarr:
     network: "{{ networks.docker.primary.name }}"
@@ -488,7 +508,7 @@ mariadb:
 nextcloud:
   admin_passwd: "{{ lookup('lastpass', '****/Nextcloud', field='password') }}"
   admin_user: "{{ lookup('lastpass', '****/Nextcloud', field='user') }}"
-  instance_id: "{{ lookup('lastpass', 'johnflix.tv/Nextcloud', field='instance_id') }}"
+  instance_id: "{{ lookup('lastpass', '****/Nextcloud', field='instance_id') }}"
   passwd: "{{ lookup('lastpass', '****/nextcloud.mariadb', field='password') }}"
   passwd_salt: "{{ lookup('lastpass', '****/Nextcloud', field='password_salt') }}"
   secret: "{{ lookup('lastpass', '****/Nextcloud', field='secret') }}"
@@ -613,4 +633,21 @@ mellow:
 synclounge:
   autojoin: "true" # Should Synclounge join the hosted server automatically?
   autojoinroom: "****" # Room that users join automatically
+
+# Cloudbeaver vars
+cloudbeaver:
+  password: "{{ lookup('lastpass', '****/Cloudbeaver', field='password') }}"
+
+# StatPing vars
+statping:
+  description: "{{ lookup('lastpass', '****/StatPing', field='description') }}"
+  name: "{{ lookup('lastpass', '****/StatPing', field='name') }}"
+  password: "{{ lookup('lastpass', '****/StatPing', field='password') }}"
+  prefix: "{{ lookup('lastpass', '****/StatPing', field='prefix') }}"
+  username: "{{ lookup('lastpass', '****/StatPing', field='username') }}"
+
+# Redis vars
+redis:
+  password: "{{ lookup('lastpass', '****/Redis', field='password') }}"
+  username: "{{ lookup('lastpass', '****/Redis', field='username') }}"
 ...

@@ -18,6 +18,7 @@
   # - database-mariadb
   # - docker-postgresql
   # - database-postgresql
+  # - docker-redis
   # - docker-portainer
   # - docker-influxdb
   # - docker-traefik
@@ -25,7 +26,7 @@
   # - docker-node-exporter
   # - docker-statping
   # - docker-prometheus
-  # - docker-promgen
+  - docker-promgen
   # - docker-asf
   # - docker-cloudbeaver
   # - docker-grafana
