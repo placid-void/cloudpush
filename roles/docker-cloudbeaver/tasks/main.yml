@@ -73,10 +73,10 @@
       - "{{ directories.container_root }}/{{ containers.ombi.subdomain }}/Ombi.db:/app/workspace/GlobalConfiguration/db/ombi.db:z"
       - "{{ directories.container_root }}/{{ containers.ombi4k.subdomain }}/Ombi.db:/app/workspace/GlobalConfiguration/db/ombi4k.db:z"
       - "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}/Library/Application Support/Plex Media Server/Plug-in Support/Databases/com.plexapp.plugins.library.db:/app/workspace/GlobalConfiguration/db/plex.db:z"
-      - "{{ directories.container_root }}/{{ containers.radarr.subdomain }}/nzbdrone.db:/app/workspace/GlobalConfiguration/db/radarr.db:z"
-      - "{{ directories.container_root }}/{{ containers.radarr4k.subdomain }}/nzbdrone.db:/app/workspace/GlobalConfiguration/db/radarr4k.db:z"
-      - "{{ directories.container_root }}/{{ containers.sonarr.subdomain }}/nzbdrone.db:/app/workspace/GlobalConfiguration/db/sonarr.db:z"
-      - "{{ directories.container_root }}/{{ containers.sonarr4k.subdomain }}/nzbdrone.db:/app/workspace/GlobalConfiguration/db/sonarr4k.db:z"
+      - "{{ directories.container_root }}/{{ containers.radarr.subdomain }}/radarr.db:/app/workspace/GlobalConfiguration/db/radarr.db:z"
+      - "{{ directories.container_root }}/{{ containers.radarr4k.subdomain }}/radarr.db:/app/workspace/GlobalConfiguration/db/radarr4k.db:z"
+      - "{{ directories.container_root }}/{{ containers.sonarr.subdomain }}/sonarr.db:/app/workspace/GlobalConfiguration/db/sonarr.db:z"
+      - "{{ directories.container_root }}/{{ containers.sonarr4k.subdomain }}/sonarr.db:/app/workspace/GlobalConfiguration/db/sonarr4k.db:z"
       - "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/tautulli.db:/app/workspace/GlobalConfiguration/db/tautulli.db:z"
     networks_cli_compatible: no
     networks:
