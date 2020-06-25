@@ -42,7 +42,7 @@
 #     setype: container_file_t
 #   loop:
 #     - "{{ containers.statping.subdomain.0 }}"
-#     - "{{ containers.statping.subdomain.0/logs }}"
+#     - "{{ containers.statping.subdomain.0 }}/logs"
 
   # Standup the container in inventory
 - name: Start StatPing
@@ -52,33 +52,29 @@
     state: started
     restart_policy: unless-stopped
     image: statping/statping
-    # links: # Prevent container creation and startup until linked containers are running
-    #   - "{{ containers.mariadb.subdomain }}:{{ containers.mariadb.subdomain }}"
     log_driver: "json-file"
     log_options:
       max-size: "12m"
       max-file: "3"
     # Mount required directories with the container
-    # volumes:
-    #   - "{{ directories.container_root }}/{{ containers.statping.subdomain.0 }}:/app:z"
-    # env:
-    #   ADMIN_EMAIL: "{{ mail.from_address }}"
-    #   ADMIN_PASSWORD: "{{ statping.password }}"
-    #   ADMIN_USER: "{{ statping.username }}"
-    #   DB_CONN: "mysql"
-    #   DB_HOST: "{{ containers.mariadb.subdomain }}"
-    #   DB_DATABASE: "{{ containers.statping.subdomain.0 }}"
-    #   DB_USER: "{{ containers.statping.subdomain.0 }}"
-    #   DB_PASS: " {{ mariadb.statping_passwd }}"
-    #   DB_PORT: "{{ containers.mariadb.port }}"
-    #   DESCRIPTION: "{{ statping.description }}"
-    #   DOMAIN: "{{ domain }}"
-    #   NAME: "{{ statping.name }}"
-    #   PREFIX: "{{ statping.prefix }}" # A Prefix for each value in Prometheus /metric exporter
+    volumes:
+      - "{{ directories.container_root }}/{{ containers.statping.subdomain.0 }}:/config:z"
+    env:
+      ADMIN_EMAIL: "{{ mail.from_address }}"
+      ADMIN_PASSWORD: "{{ statping.password }}"
+      ADMIN_USER: "{{ statping.username }}"
+      DESCRIPTION: "{{ statping.description }}"
+      DOMAIN: "{{ domain }}"
+      NAME: "{{ statping.name }}"
+      PREFIX: "{{ statping.prefix }}" # A Prefix for each value in Prometheus /metric exporter
+      STATPING_DIR: "/config"
+      TZ: "Canada/Montreal"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"
         aliases: "{{ containers.statping.subdomain.0 }}"
+    # Statping user details
+    user: "{{ users.primary.uid }}:{{ users.primary.gid }}"
     purge_networks: yes
     pull: true
     labels:
@@ -88,11 +84,11 @@
       traefik.enable: "true"
       ## HTTP Routers
       traefik.http.routers.statping-rtr.entrypoints: "https"
-      traefik.http.routers.statping-rtr.rule: "Host(`{{ containers.statping.subdomain.0 }}.{{ containers.statping.tld }}, {{ containers.statping.subdomain.1 }}.{{ containers.statping.tld }}`)"
+      traefik.http.routers.statping-rtr.rule: "Host(`{{ containers.statping.subdomain.0 }}.{{ containers.statping.tld }}`, `{{ containers.statping.subdomain.1 }}.{{ containers.statping.tld }}`)"
       traefik.http.routers.statping-rtr.tls: "true"
       ## HTTP Services
       traefik.http.routers.statping-rtr.service: "statping-svc"
       traefik.http.services.statping-svc.loadbalancer.server.port: "{{ containers.statping.port | default('80') }}"
       ## Middlewares
-      traefik.http.routers.statping-rtr.middlewares: "chain-oauth@file"
+      traefik.http.routers.statping-rtr.middlewares: "chain-no-auth@file"
 ...
