@@ -10,7 +10,6 @@
 
 # create tmp and nzb folders
   mkdir /tmp
-  mkdir {{ directories.data_dir }}/nzb
 
 # symlink mnt and data dirs until queue is empty
   rm -r /mnt
