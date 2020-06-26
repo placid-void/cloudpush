@@ -1,5 +1,4 @@
 ---
-  # Standup the container in inventory
 - name: Start cAdvisor
   docker_container:
     name: "{{ containers.cadvisor.subdomain }}"
@@ -11,8 +10,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "/:/rootfs:ro"
       - "/sys:/sys:ro"
       - "/var/lib/docker:/var/lib/docker:ro"

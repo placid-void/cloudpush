@@ -1,6 +1,5 @@
 ---
-  # Verify required directories with correct permissions are created
-- name: check dir ownership
+- name: Verify required directories with correct permissions are created
   file:
     recurse: yes
     path: "{{ directories.container_root }}/{{ item }}"
@@ -12,8 +11,7 @@
     - "{{ containers.postgresql.subdomain }}"
     - "{{ containers.postgresql.subdomain }}/data"
 
-  # Verify templated required files with correct permissions are created
-- name: Template required container config files
+- name: Verify templated required files with correct permissions are created
   template:
     src: "templates/{{ item }}.j2"
     dest: "{{ directories.container_root }}/{{ containers.postgresql.subdomain }}/{{ item }}"
@@ -23,7 +21,6 @@
   loop:
     - "postgresql.conf"
 
-  # Standup the container in inventory
 - name: Start PostgreSQL
   docker_container:
     name: "{{ containers.postgresql.subdomain }}"
@@ -35,8 +32,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.postgresql.subdomain }}postgresql.conf:/etc/postgresql/postgresql.conf:z"
       - "{{ directories.container_root }}/{{ containers.postgresql.subdomain }}/data:/var/lib/postgresql/data:z"
       - "/etc/passwd:/etc/passwd:ro" # Required for custom user to work correctly

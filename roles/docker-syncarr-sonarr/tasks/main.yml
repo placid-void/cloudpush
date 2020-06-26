@@ -1,5 +1,4 @@
 ---
-  # Standup the container in inventory
 - name: Start Syncarr Sonarr
   docker_container:
     name: "{{ containers.syncarr_sonarr.subdomain }}"

@@ -1,5 +1,4 @@
 ---
-  # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
@@ -15,17 +14,15 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-#   # Verify required directories with correct permissions are created
-# - name: check dir ownership
-#   file:
-#     recurse: yes
-#     path: "{{ directories.container_root }}/{{ containers.adminer.subdomain }}"
-#     owner: "{{ users.primary.user }}"
-#     group: "{{ users.primary.group }}"
-#     state: directory
-#     setype: container_file_t
+- name: Verify required directories with correct permissions are created
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ containers.adminer.subdomain }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
 
-  # Standup the container in inventory
 - name: Start Adminer
   docker_container:
     name: "{{ containers.adminer.subdomain }}"
@@ -33,15 +30,12 @@
     state: started
     restart_policy: unless-stopped
     image: adminer
-    # links: # Prevent container creation and startup until linked containers are running
-    #   - "{{ containers.mariadb.subdomain }}:{{ containers.mariadb.subdomain }}"
+    links: # Prevent container creation and startup until linked containers are running
+      - "{{ containers.mariadb.subdomain }}:{{ containers.mariadb.subdomain }}"
     log_driver: "json-file"
     log_options:
       max-size: "12m"
       max-file: "3"
-    # # Mount required directories with the container
-    # volumes:
-    #   - "{{ directories.container_root }}/{{ containers.adminer.subdomain }}:/config:z"
     env:
       # DB_HOST: "{{ containers.mariadb.subdomain }}:{{ containers.mariadb.port }}" # MariaDB Host
       # DB_USER: "{{ containers.bookstack.subdomain }}" # MariaDB User

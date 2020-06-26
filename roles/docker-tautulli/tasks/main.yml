@@ -1,5 +1,4 @@
 ---
-  # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
@@ -15,21 +14,16 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # Verify required directories with correct permissions are created
-- name: check dir ownership
+- name: Verify required directories with correct permissions are created
   file:
     recurse: yes
-    path: "{{ directories.container_root }}/{{ item }}"
+    path: "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/scripts"
     owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
     state: directory
     setype: container_file_t
-  loop:
-    - "{{ containers.tautulli.subdomain }}"
-    - "{{ containers.tautulli.subdomain }}/scripts"
 
-  # Verify required files with correct permissions are created
-- name: copy scripts to scripts folder
+- name: Verify required files with correct permissions are created
   copy:
     src: "{{ item }}"
     dest: "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/scripts/{{ item }}"
@@ -37,10 +31,9 @@
     group: "{{ users.primary.group }}"
     mode: 0770
   loop:
-    - 99-requests.sh
-    - kill_stream.py
+    - "99-requests.sh"
+    - "kill_stream.py"
 
-  # Standup the container in inventory
 - name: Start Tautulli
   docker_container:
     name: "{{ containers.tautulli.subdomain }}"
@@ -54,8 +47,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}:/config:z"
       - "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/scripts/99-requests.sh:/etc/cont-init.d/99-requests.sh:z"
       - "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}/Library/Application Support/Plex Media Server/Logs:/logs:ro" # Mount Plex Server logs

@@ -1,50 +1,43 @@
 ---
-#   # DNS Record Creation for hostname of container
-# - name: Create DNS Reconds on Cloudflare for this container
-#   cloudflare_dns:
-#     account_api_token: "{{ cloudflare.api }}"
-#     account_email: "{{ cloudflare.email }}"
-#     proxied: "yes"
-#     record: "{{ containers.statping.subdomain.0 }}"
-#     solo: "true"
-#     state: "present"
-#     type: "{{ item.type }}"
-#     value: "{{ item.value }}"
-#     zone: "{{ domain }}"
-#   loop:
-#     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-#     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns:
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.statping.subdomain.0 }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-#   # DNS Record Creation for hostname of container
-# - name: Create DNS Reconds on Cloudflare for this container
-#   cloudflare_dns:
-#     account_api_token: "{{ cloudflare.api }}"
-#     account_email: "{{ cloudflare.email }}"
-#     proxied: "yes"
-#     record: "{{ containers.statping.subdomain.1 }}"
-#     solo: "true"
-#     state: "present"
-#     type: "{{ item.type }}"
-#     value: "{{ item.value }}"
-#     zone: "{{ domain }}"
-#   loop:
-#     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-#     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns:
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.statping.subdomain.1 }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-#   # Verify required directories with correct permissions are created
-# - name: check dir ownership
-#   file:
-#     recurse: yes
-#     path: "{{ directories.container_root }}/{{ item }}"
-#     owner: "{{ users.primary.user }}"
-#     group: "{{ users.primary.group }}"
-#     state: directory
-#     setype: container_file_t
-#   loop:
-#     - "{{ containers.statping.subdomain.0 }}"
-#     - "{{ containers.statping.subdomain.0 }}/logs"
+- name: Verify required directories with correct permissions are created
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ containers.statping.subdomain.0 }}/logs"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
 
-  # Standup the container in inventory
 - name: Start StatPing
   docker_container:
     name: "{{ containers.statping.subdomain.0 }}"
@@ -56,8 +49,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.statping.subdomain.0 }}:/config:z"
     env:
       ADMIN_EMAIL: "{{ mail.from_address }}"

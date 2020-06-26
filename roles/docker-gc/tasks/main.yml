@@ -1,5 +1,4 @@
 ---
-  # Standup the container in inventory
 - name: Start Docker-GC
   docker_container:
     name: "{{ containers.gc.subdomain }}"
@@ -12,13 +11,10 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "/var/run/docker.sock:/var/run/docker.sock:z"
       - "/etc:/etc:z"
     env:
-      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
-      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
       REMOVE_VOLUMES: "1" # Should GC Remove abandoned volumes?
     networks_cli_compatible: no
     networks:

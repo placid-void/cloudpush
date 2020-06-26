@@ -1,5 +1,4 @@
 ---
-  # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
@@ -15,21 +14,16 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # Verify required directories with correct permissions are created
-- name: Check Dir Ownership
+- name: Verify required directories with correct permissions are created
   file:
     recurse: yes
-    path: "{{ directories.container_root }}/{{ item }}"
+    path: "{{ directories.container_root }}/{{ containers.traefik.subdomain }}/rules/"
     owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
     state: directory
     setype: container_file_t
-  loop:
-    - "{{ containers.traefik.subdomain }}/"
-    - "{{ containers.traefik.subdomain }}/rules/"
 
-  # Verify required files with correct permissions are created
-- name: Creating Required Files
+- name: Verify required files with correct permissions are created
   file:
     path: "{{ directories.container_root }}/{{ containers.traefik.subdomain }}/{{ item }}"
     state: touch
@@ -40,8 +34,7 @@
     - "accesslog.log"
     - "acme.json"
 
-  # Verify templated required files with correct permissions are created
-- name: Adding Rules Files
+- name: Verify templated required files with correct permissions are created
   template:
     src: "templates/rules/{{ item }}.j2"
     dest: "{{ directories.container_root }}/{{ containers.traefik.subdomain }}/rules/{{ item }}"
@@ -53,7 +46,6 @@
     - "middlewares.toml"
     - "middleware-chains.toml"
 
-  # Standup the container in inventory
 - name: Start Traefik
   docker_container:
     name: "{{ containers.traefik.subdomain }}"
@@ -65,8 +57,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "{{ directories.container_root }}/{{ containers.traefik.subdomain }}:/config:z"
     env:
@@ -103,8 +94,7 @@
     networks:
       - name: "{{ networks.docker.primary.name }}"
         aliases: "{{ containers.traefik.subdomain }}"
-    # Pass required Traefik ports to the host interface
-    ports:
+    ports: # Pass required Traefik ports to the host interface
       - "80:80/tcp"
       - "443:443/tcp"
     purge_networks: yes
@@ -134,7 +124,6 @@
       ## Middlewares
       traefik.http.routers.traefik-rtr.middlewares: "chain-oauth@file"
 
-  # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
@@ -150,7 +139,6 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # Standup the container in inventory
 - name: Start Traefik OAuth
   docker_container:
     name: "{{ containers.oauth.subdomain }}"

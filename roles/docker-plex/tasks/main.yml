@@ -1,5 +1,4 @@
 ---
-  # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
@@ -15,7 +14,6 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
@@ -31,8 +29,7 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # Verify required directories with correct permissions are created
-- name: check dir ownership
+- name: Verify required directories with correct permissions are created
   file:
     recurse: yes
     path: "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}/"
@@ -41,8 +38,7 @@
     state: directory
     setype: container_file_t
 
-  # Check if GPU exists on host to pass to Plex Container
-- name: Check /dev/dri exists
+- name: Check if GPU exists on host to pass to Plex
   stat:
     path: '/dev/dri'
   register: dev_dri
@@ -61,8 +57,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}:/config:z"
       - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:sharedz"
     env:
@@ -70,11 +65,9 @@
       PLEX_GID: "{{ users.primary.gid }}" # Pass proper GID to the container
       UMASK: "{{ mount_options.umask }}" # File UMASK
     devices: "{{ '/dev/dri:/dev/dri' if dev_dri.stat.exists == True | default(False) else omit }}" # Pass GPU to the container, if it exists
-    # Block Plex Spying
-    etc_hosts:
+    etc_hosts: # Block Plex Spying
       { 'analytics.plex.tv': '127.0.0.1', 'metrics.plex.tv': '127.0.0.1' }
-    # Pass required Plex ports to the host interface
-    ports:
+    ports: # Pass required Plex ports to the host interface
       - '32400:32400/tcp'
       - '3005:3005/tcp'
       - '8324:8324/tcp'

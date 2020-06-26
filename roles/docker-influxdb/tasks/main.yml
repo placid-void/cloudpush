@@ -1,6 +1,5 @@
 ---
-  # Verify required directories with correct permissions are created
-- name: check dir ownership
+- name: Verify required directories with correct permissions are created
   file:
     recurse: yes
     path: "{{ directories.container_root }}/{{ containers.influxdb.subdomain }}"
@@ -9,7 +8,6 @@
     state: directory
     setype: container_file_t
 
-  # Standup the container in inventory
 - name: Start InfluxDB
   docker_container:
     name: "{{ containers.influxdb.subdomain }}"
@@ -21,8 +19,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.influxdb.subdomain }}:/var/lib/influxdb:z"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container

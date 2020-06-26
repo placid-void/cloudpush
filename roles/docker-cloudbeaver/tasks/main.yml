@@ -1,6 +1,4 @@
 ---
-# https://github.com/dbeaver/cloudbeaver
-  # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
@@ -16,27 +14,23 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # Verify required directories with correct permissions are created
-- name: check dir ownership
+- name: Verify required directories with correct permissions are created
   file:
     recurse: yes
     path: "{{ directories.container_root }}/{{ item }}"
-    owner: "{{ users.primary.user }}"
-    group: "{{ users.primary.group }}"
+    owner: "root"
+    group: "root"
     state: directory
     setype: container_file_t
   loop:
     - "{{ containers.cloudbeaver.subdomain }}"
 
-  # Verify templated required files with correct permissions are created
-- name: Adding Required Files
+- name: Verify templated required files with correct permissions are created
   template:
     src: "templates/{{ item }}.j2"
     dest: "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/{{ item }}"
     owner: "root"
     group: "root"
-    # owner: "{{ users.primary.user }}"
-    # group: "{{ users.primary.group }}"
     mode: 0660
   loop: 
     - "cloudbeaver.conf"
@@ -58,8 +52,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/cloudbeaver.conf:/app/conf/cloudbeaver.conf:z"
       - "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/initial-data.conf:/app/conf/initial-data.conf:z"
       - "{{ directories.container_root }}/{{ containers.cloudbeaver.subdomain }}/product.conf:/app/conf/product.conf:z"

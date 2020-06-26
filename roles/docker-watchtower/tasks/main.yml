@@ -1,5 +1,4 @@
 ---
-  # Standup the container in inventory
 - name: Start Watchtower
   docker_container:
     name: "{{ containers.watchtower.subdomain }}"
@@ -12,8 +11,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container

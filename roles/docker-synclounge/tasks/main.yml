@@ -1,5 +1,4 @@
 ---
-  # DNS Record Creation for player of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns: 
     account_api_token: "{{ cloudflare.api }}"
@@ -15,7 +14,6 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
   
-  # DNS Record Creation for server of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns: 
     account_api_token: "{{ cloudflare.api }}"
@@ -31,7 +29,6 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # Standup the container in inventory
 - name: Start Synclounge
   docker_container:
     name: "{{ containers.synclounge.subdomain }}"

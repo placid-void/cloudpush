@@ -1,5 +1,4 @@
 ---
-  # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
@@ -15,8 +14,7 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # Verify required directories with correct permissions are created
-- name: Check directory ownership
+- name: Verify required directories with correct permissions are created
   file:
     recurse: yes
     path: "{{ directories.container_root }}/{{ item }}"
@@ -25,7 +23,6 @@
     state: directory
     setype: container_file_t
   loop:
-    - "{{ containers.nzbget.subdomain }}"
     - "{{ containers.nzbget.subdomain }}/cont-init.d"
     - "{{ containers.nzbget.subdomain }}/installer"
     - "{{ containers.nzbget.subdomain }}/nzbs"
@@ -33,8 +30,7 @@
     - "{{ containers.nzbget.subdomain }}/scripts/MP4_Automator"
     - "{{ containers.nzbget.subdomain }}/services.d"
 
-  # Verify required files with correct permissions are created
-- name: Copy required files to container folders
+- name: Verify required files with correct permissions are created
   copy:
     src: "files/{{ item }}"
     dest: "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}/{{ item }}"
@@ -52,8 +48,7 @@
     - scripts/ReverseName.py
     - services.d/run
 
-  # Verify templated required files with correct permissions are created
-- name: Template required container config files
+- name: Verify templated required files with correct permissions are created
   template:
     src: "templates/{{ item }}.j2"
     dest: "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}/{{ item }}"
@@ -64,7 +59,6 @@
     - "scripts/MP4_Automator/autoProcess.ini"
     - "nzbget.conf"
 
-  # Standup the container in inventory
 - name: Start NZBGet
   docker_container:
     name: "{{ containers.nzbget.subdomain }}"
@@ -78,8 +72,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}:/config:z"
       - "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}/cont-init.d/30-config:/etc/cont-init.d/30-config:z"
       - "{{ directories.host_data_dir }}:{{ directories.data_dir }}:shared"

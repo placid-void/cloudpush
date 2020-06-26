@@ -1,5 +1,4 @@
 ---
-  # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
@@ -15,8 +14,7 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # Verify required directories with correct permissions are created
-- name: Check directory ownership
+- name: Verify required directories with correct permissions are created
   file:
     recurse: yes
     path: "{{ directories.container_root }}/{{ containers.alltube.subdomain }}"
@@ -25,8 +23,7 @@
     state: directory
     setype: container_file_t
 
-  # Verify templated required files with correct permissions are created
-- name: Copy config template to host
+- name: Verify templated required files with correct permissions are created
   template:
     src: "templates/config.yml.j2"
     dest: "{{ directories.container_root }}/{{ containers.alltube.subdomain }}/config.yml"
@@ -34,7 +31,6 @@
     group: "{{ users.primary.group }}"
     mode: 0660
 
-  # Standup the container in inventory
 - name: Start Alltube
   docker_container:
     name: "{{ containers.alltube.subdomain }}"
@@ -48,8 +44,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.alltube.subdomain }}/config.yml:/config/config.yml:z"
       - "{{ directories.host_data_dir }}:{{ directories.data_dir }}:shared"
     env:

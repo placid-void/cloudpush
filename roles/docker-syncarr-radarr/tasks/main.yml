@@ -1,5 +1,4 @@
 ---
-  # Standup the container in inventory
 - name: Start Syncarr Radarr
   docker_container:
     name: "{{ containers.syncarr_radarr.subdomain }}"

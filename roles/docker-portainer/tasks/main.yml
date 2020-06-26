@@ -1,5 +1,4 @@
 ---
-# DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
@@ -15,8 +14,7 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # Verify required directories with correct permissions are created
-- name: check dir ownership
+- name: Verify required directories with correct permissions are created
   file:
     recurse: yes
     path: "{{ directories.container_root }}/{{ containers.portainer.subdomain }}"
@@ -25,7 +23,6 @@
     state: directory
     setype: container_file_t
 
-  # Standup the container in inventory
 - name: Start Portainer
   docker_container:
     name: "{{ containers.portainer.subdomain }}"
@@ -38,8 +35,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "/var/run/docker.sock:/var/run/docker.sock:z"
       - "{{ directories.container_root }}/{{ containers.portainer.subdomain }}:{{ directories.data_dir }}:shared"
     env:

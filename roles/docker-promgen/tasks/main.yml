@@ -1,6 +1,4 @@
 ---
-# https://github.com/line/promgen
-  # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
@@ -16,8 +14,7 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # Verify required directories with correct permissions are created
-- name: check dir ownership
+- name: Verify required directories with correct permissions are created
   file:
     recurse: yes
     path: "{{ directories.container_root }}/{{ item }}"
@@ -28,8 +25,7 @@
   loop:
     - "{{ containers.promgen.subdomain }}"
 
-  # Verify templated required files with correct permissions are created
-- name: Adding Required Files
+- name: Verify templated required files with correct permissions are created
   template:
     src: "templates/{{ item }}.j2"
     dest: "{{ directories.container_root }}/{{ containers.promgen.subdomain }}/{{ item }}"
@@ -39,8 +35,7 @@
   loop:
     - "promgen.yml"
 
-  # Verify required files with correct permissions are created
-- name: Creating Required Files
+- name: Verify required files with correct permissions are created
   file:
     path: "{{ directories.container_root }}/{{ containers.promgen.subdomain }}/{{ item }}"
     state: touch
@@ -52,7 +47,6 @@
     - "promgen.json"
     - "promgen.rule.yml"
 
-  # Standup the container in inventory
 - name: Start Promgen
   docker_container:
     name: "{{ containers.promgen.subdomain }}"
@@ -64,8 +58,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.promgen.subdomain }}:/config:z"
     env: 
       ALLOWED_HOSTS: "{{ containers.promgen.subdomain }}.{{ containers.promgen.tld }}"

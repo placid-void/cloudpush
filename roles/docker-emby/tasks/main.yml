@@ -1,37 +1,33 @@
 ---
-#   # DNS Record Creation for hostname of container
-# - name: Create DNS Reconds on Cloudflare for this container
-#   cloudflare_dns:
-#     account_api_token: "{{ cloudflare.api }}"
-#     account_email: "{{ cloudflare.email }}"
-#     proxied: "yes"
-#     record: "{{ containers.emby.subdomain }}"
-#     solo: "true"
-#     state: "present"
-#     type: "{{ item.type }}"
-#     value: "{{ item.value }}"
-#     zone: "{{ domain }}"
-#   loop:
-#     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-#     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns:
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.emby.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-#   # Verify required directories with correct permissions are created
-# - name: check dir ownership
-#   file:
-#     recurse: yes
-#     path: "{{ directories.container_root }}/{{ containers.emby.subdomain }}/"
-#     owner: "{{ users.primary.user }}"
-#     group: "{{ users.primary.group }}"
-#     state: directory
-#     setype: container_file_t
+- name: Verify required directories with correct permissions are created
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ containers.emby.subdomain }}/"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
 
-  # Check if GPU exists on host to pass to Plex Container
-- name: Check /dev/dri exists
+- name: Check if GPU exists on host to pass to Emby
   stat:
     path: '/dev/dri'
   register: dev_dri
 
-  # Standup the container in inventory
 - name: Start Emby
   docker_container:
     name: "{{ containers.emby.subdomain }}"
@@ -45,8 +41,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.emby.subdomain }}:/config:z"
       - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:sharedz"
     env:

@@ -1,5 +1,4 @@
 ---
-  # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
@@ -15,8 +14,7 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # Verify required directories with correct permissions are created
-- name: check dir ownership
+- name: Verify required directories with correct permissions are created
   file:
     recurse: yes
     path: "{{ directories.container_root }}/{{ item }}"
@@ -28,8 +26,7 @@
     - "{{ containers.deluge.subdomain }}"
     - "{{ containers.deluge.subdomain }}/openvpn"
 
-  # Verify required files with correct permissions are created
-- name: Copy required files to container folders
+- name: Verify required files with correct permissions are created
   copy:
     src: "files/{{ item }}"
     dest: "{{ directories.container_root }}/{{ containers.deluge.subdomain }}/{{ item }}"
@@ -40,7 +37,6 @@
     - "openvpn/ca-aes-128-cbc-udp-dns.ovpn"
     - "init.sh"
 
-  # Standup the container in inventory
 - name: Start Deluge
   docker_container:
     name: "{{ containers.deluge.subdomain }}"
@@ -56,12 +52,10 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.deluge.subdomain }}:/config:z"
       - "{{ directories.host_data_dir }}:{{ directories.data_dir }}:shared"
-    # Required capabilities for container to function properly
-    capabilities:
+    capabilities: # Required capabilities for container to function properly
       - "NET_ADMIN"
     env:
       DEBUG: "{{ deluge.debug }}" # Debug Option

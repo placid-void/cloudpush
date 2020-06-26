@@ -1,6 +1,5 @@
 ---
-    # Verify required directories with correct permissions are created
-  - name: check dir ownership
+  - name: Verify required directories with correct permissions are created
     file:
       recurse: yes
       path: "{{ directories.container_root }}/{{ containers.traktarr.subdomain }}"
@@ -9,8 +8,7 @@
       state: directory
       setype: container_file_t
 
-    # Verify templated required files with correct permissions are created
-  - name: copy config.json template to host
+  - name: Verify templated required files with correct permissions are created
     template:
       src: "templates/config.json.j2"
       dest: "{{ directories.container_root }}/{{ containers.traktarr.subdomain }}/config.json"
@@ -18,7 +16,6 @@
       group: "{{ users.primary.group }}"
       mode: 0640
 
-    # Standup the container in inventory
   - name: Start Traktarr
     docker_container:
       name: "{{ containers.traktarr.subdomain }}"
@@ -33,8 +30,7 @@
       log_options:
         max-size: "12m"
         max-file: "3"
-      # Mount required directories with the container
-      volumes:
+      volumes: # Mount required directories with the container
         - "{{ directories.container_root }}/{{ containers.traktarr.subdomain }}:/config:z"
       env:
         PUID: "{{ users.primary.uid }}" # Pass proper UID to the container

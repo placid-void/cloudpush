@@ -1,388 +1,388 @@
 ---
-  # - name: set hostname
-  #   hostname:
-  #     name: {{ containers.host.subdomain }}.{{ containers.host.tld }}
+- name: Set hostname
+  hostname:
+    name: "{{ containers.host.subdomain }}.{{ containers.host.tld }}"
 
-  # - name: Create DNS Reconds on Cloudflare for this container
-  #   cloudflare_dns: 
-  #     account_api_token: "{{ cloudflare.api }}"
-  #     account_email: "{{ cloudflare.email }}"
-  #     proxied: "yes"
-  #     record: "{{ containers.host.subdomain }}"
-  #     solo: "true"
-  #     state: "present"
-  #     type: "{{ item.type }}"
-  #     value: "{{ item.value }}"
-  #     zone: "{{ domain }}"
-  #   loop:
-  #     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-  #     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns: 
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.host.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    zone: "{{ domain }}"
+  loop:
+    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # - name: Create Required Directories
-  #   file:
-  #     recurse: yes
-  #     path: "{{ item }}"
-  #     owner: "{{ users.primary.user }}"
-  #     group: "{{ users.primary.group }}"
-  #     state: directory
-  #     setype: container_file_t
-  #   loop:
-  #     - "{{ directories.container_root }}"
-  #     - "{{ directories.host_data_dir}}"
+- name: Create Required Directories
+  file:
+    recurse: yes
+    path: "{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "{{ directories.container_root }}"
+    - "{{ directories.host_data_dir}}"
 
-  # - name: create all system groups
-  #   group:
-  #     name: "{{ item.group }}"
-  #     gid: "{{ item.gid }}"
-  #     system: yes
-  #     state: present
-  #   loop: "{{ system_groups }}"
+- name: Create all system groups
+  group:
+    name: "{{ item.group }}"
+    gid: "{{ item.gid }}"
+    system: yes
+    state: present
+  loop: "{{ system_groups }}"
 
-  # - name: create primary user
-  #   user:
-  #     name: "{{ users.primary.user }}"
-  #     uid: "{{ users.primary.uid }}"
-  #     system: yes
-  #     state: present
+- name: Create primary user
+  user:
+    name: "{{ users.primary.user }}"
+    uid: "{{ users.primary.uid }}"
+    system: yes
+    state: present
 
-  # - name: create secondary user
-  #   user:
-  #     name: "{{ users.secondary.user }}"
-  #     uid: "{{ users.secondary.uid }}"
-  #     system: yes
-  #     state: present
+- name: Create secondary user
+  user:
+    name: "{{ users.secondary.user }}"
+    uid: "{{ users.secondary.uid }}"
+    system: yes
+    state: present
 
-  # - name: create grafana user
-  #   user:
-  #     name: "{{ users.grafana.user }}"
-  #     uid: "{{ users.grafana.uid }}"
-  #     system: yes
-  #     state: present
+- name: Create grafana user
+  user:
+    name: "{{ users.grafana.user }}"
+    uid: "{{ users.grafana.uid }}"
+    system: yes
+    state: present
+
+- name: Add users to the new groups
+  user:
+    name: "{{ item }}"
+    shell: /bin/bash
+    groups: docker,grafana,sudo,wheel
+    append: yes
+  loop:
+    - "{{ users.primary.user }}"
+    - "{{ users.secondary.user }}"
+    - root
+
+- name: Add sudoers to system
+  template: 
+    src: sudoers.j2
+    dest: /etc/sudoers.d/010-ppmpro-users
+    backup: no
+    group: root
+    owner: root
+    mode: 0440
+    validate: "visudo -cf %s"
+
+- name: Adjust APT update intervals
+  template:
+    src: "templates/10periodic.j2"
+    dest: "/etc/apt/apt.conf.d/10periodic"
+
+- name: Copy updatedb.conf settings
+  template:
+    src: "templates/updatedb.conf.j2"
+    dest: "/etc/updatedb.conf"
+
+- name: Verify required directories with correct permissions are created
+  file:
+    recurse: yes
+    path: "/{{ item }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "etc/docker"
+    - "opt/appdata"
+
+- name: Verify required directories with correct permissions are created
+  file:
+    recurse: yes
+    path: "/home/{{ users.primary.user }}/.ssh"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0700
+    state: directory
+
+- name: Creating authorized_keys File
+  file:
+    path: "/home/{{ users.primary.user }}/.ssh/authorized_keys"
+    state: touch
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0660
+
+- name: Copy ssh keys to primary user home folder
+  lineinfile:
+    path: "/home/{{ users.primary.user }}/.ssh/authorized_keys"
+    line: "{{ ssh.primary }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0400
+
+- name: Verify required directories with correct permissions are created
+  file:
+    recurse: yes
+    path: "/home/{{ users.secondary.user }}/.ssh"
+    owner: "{{ users.secondary.user }}"
+    group: "{{ users.secondary.group }}"
+    mode: 0700
+    state: directory
+
+- name: Creating authorized_keys File
+  file:
+    path: "/home/{{ users.secondary.user }}/.ssh/authorized_keys"
+    state: touch
+    owner: "{{ users.secondary.user }}"
+    group: "{{ users.secondary.group }}"
+    mode: 0660
+
+- name: Copy ssh keys to secondary user home folder
+  lineinfile:
+    path: "/home/{{ users.secondary.user }}/.ssh/authorized_keys"
+    line: "{{ ssh.secondary }}"
+    owner: "{{ users.secondary.user }}"
+    group: "{{ users.secondary.group }}"
+    mode: 0400
+
+- name: Update OS
+  apt:
+    upgrade: dist
+    autoremove: yes
+    autoclean: yes
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+
+- name: Install required apt packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg-agent
+    - software-properties-common
+
+- name: Add Docker Community Edition GPG Key to host
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker Community Edition repo
+  apt_repository:
+    repo: "deb https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    state: present
+
+- name: Install required apt packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - acl
+    - bash-completion
+    - bc
+    - cockpit
+    - cockpit-doc
+    - cockpit-docker
+    - cockpit-machines
+    - cockpit-packagekit
+    - cockpit-pcp
+    - containerd.io
+    - ctop
+    - dialog
+    - dirmngr
+    - docker-ce
+    - docker-ce-cli
+    - elinks
+    - ethtool
+    - fail2ban
+    - figlet
+    - fuse
+    - gawk
+    - git
+    - glances
+    - hdparm
+    - htop
+    - iotop
+    - linux-tools-common
+    - lolcat
+    - lsb-release
+    - lsof
+    - man-db
+    - mc
+    - mlocate
+    - ncdu
+    - npm
+    - openssh-server
+    - pciutils
+    - psmisc
+    - pwgen
+    - python-apt
+    - python-lxml
+    - python-passlib
+    - python3
+    - python3-pip
+    - rar
+    - screen
+    - smartmontools
+    - sysfsutils
+    - sysstat
+    - tmux
+    - toilet
+    - tree
+    - unrar
+    - unzip
+    - update-notifier-common
+    - vnstat
+    - vnstati
+    - wget
+    - whois
+    - zip
   
-  # - name: add users to the new groups
-  #   user:
-  #     name: "{{ item }}"
-  #     shell: /bin/bash
-  #     groups: docker,grafana,sudo,wheel
-  #     append: yes
-  #   loop:
-  #     - {{ users.primary.user }}
-  #     - {{ users.secondary.user }}
-  #     - root
+- name: Install required pip packages
+  pip:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "docker-py"
+    - "netaddr"
+    - "pip"
+    - "pymysql"
+    - "setuptools"
 
-  # - name: add sudoers to system
-  #   template: 
-  #     src: sudoers.j2
-  #     dest: /etc/sudoers.d/010-ppmpro-users
-  #     backup: no
-  #     group: root
-  #     owner: root
-  #     mode: 0440
-  #     validate: "visudo -cf %s"
+- name: Template .bashrc to folders
+  template:
+    src: "templates/skel/.bashrc.j2"
+    dest: "{{ item }}"
+  loop:
+    - "/etc/skel/.bashrc"
+    - "/home/{{ users.primary.user }}/.bashrc"
+    - "/home/{{ users.secondary.user }}/.bashrc"
+    - "/root/.bashrc"
 
-  # - name: Adjust APT update intervals
-  #   template:
-  #     src: "templates/10periodic.j2"
-  #     dest: "/etc/apt/apt.conf.d/10periodic"
+- name: Template docker daemon to etc
+  template:
+    src: "templates/docker/daemon.json.j2"
+    dest: "/etc/docker/"
 
-  # - name: Copy updatedb.conf settings
-  #   template:
-  #     src: "templates/updatedb.conf.j2"
-  #     dest: "/etc/updatedb.conf"
+- name: Copy motd to motd folder
+  copy:
+    src: "templates/update-motd.d"
+    dest: "/etc/"
 
-  # - name: check dir ownership
-  #   file:
-  #     recurse: yes
-  #     path: "/{{ item }}"
-  #     state: directory
-  #     setype: container_file_t
-  #   loop:
-  #     - "etc/docker"
-  #     - "opt/appdata"
+- name: Template fail2ban conf to host
+  template:
+    src: "templates/fail2ban.conf.j2"
+    dest: "/etc/fail2ban/fail2ban.local"
+  loop:
+    - "fail2ban.conf"
 
-  # - name: check dir ownership
-  #   file:
-  #     recurse: yes
-  #     path: "/home/{{ users.primary.user }}/.ssh"
-  #     owner: {{ users.primary.user }}
-  #     group: {{ users.primary.group }}
-  #     mode: 0700
-  #     state: directory
+- name: Template fail2ban jail conf to host
+  template:
+    src: "templates/jail.conf.j2"
+    dest: "/etc/fail2ban/jail.local"
 
-  # - name: Creating authorized_keys File
-  #   file:
-  #     path: "/home/{{ users.primary.user }}/.ssh/authorized_keys"
-  #     state: touch
-  #     owner: "{{ users.primary.user }}"
-  #     group: "{{ users.primary.group }}"
-  #     mode: 0660
+- name: Allow_other in fuse.conf
+  lineinfile: 
+    dest: "/etc/fuse.conf"
+    regexp: "#user_allow_other"
+    line: "user_allow_other"
+    state: present
 
-  # - name: copy ssh keys to primary user home folder
-  #   lineinfile:
-  #     path: "/home/{{ users.primary.user }}/.ssh/authorized_keys"
-  #     line: "{{ ssh.primary }}"
-  #     owner: "{{ users.primary.user }}"
-  #     group: "{{ users.primary.group }}"
-  #     mode: 0400
+- name: Create primary Docker network
+  docker_network:
+    name: "{{ networks.docker.primary.name }}"
+    driver: "{{ networks.docker.primary.driver }}"
+    ipam_config:
+      - subnet: "{{ networks.docker.primary.subnet }}"
+        gateway: "{{ networks.docker.primary.gateway }}"
 
-  # - name: check dir ownership
-  #   file:
-  #     recurse: yes
-  #     path: "/home/{{ users.secondary.user }}/.ssh"
-  #     owner: {{ users.secondary.user }}
-  #     group: {{ users.secondary.group }}
-  #     mode: 0700
-  #     state: directory
+- name: Disallow root SSH access
+  lineinfile: 
+    dest: "/etc/ssh/sshd_config"
+    regexp: "^PermitRootLogin"
+    line: "PermitRootLogin no"
+    state: present
 
-  # - name: Creating authorized_keys File
-  #   file:
-  #     path: "/home/{{ users.secondary.user }}/.ssh/authorized_keys"
-  #     state: touch
-  #     owner: "{{ users.secondary.user }}"
-  #     group: "{{ users.secondary.group }}"
-  #     mode: 0660
+- name: Disallow password authentication
+  lineinfile: 
+    dest: "/etc/ssh/sshd_config"
+    regexp: "^PasswordAuthentication"
+    line: "PasswordAuthentication no"
+    state: present
 
-  # - name: copy ssh keys to secondary user home folder
-  #   lineinfile:
-  #     path: "/home/{{ users.secondary.user }}/.ssh/authorized_keys"
-  #     line: "{{ ssh.secondary }}"
-  #     owner: "{{ users.secondary.user }}"
-  #     group: "{{ users.secondary.group }}"
-  #     mode: 0400
+- name: Create OpenSSH firewall rule
+  ufw:
+    state: enabled
+    rule: allow
+    name: OpenSSH
 
-  # - name: Update Ubuntu
-  #   apt:
-  #     upgrade: dist
-  #     autoremove: yes
-  #     autoclean: yes
-  #     update_cache: yes
-  #   when: ansible_os_family == "Debian"
+- name: Create http firewall rule
+  ufw:
+    rule: allow
+    proto: tcp
+    port: "80"
 
-  # - name: Install required apt packages
-  #   apt:
-  #     name: "{{ item }}"
-  #     state: present
-  #   loop:
-  #     - apt-transport-https
-  #     - ca-certificates
-  #     - curl
-  #     - gnupg-agent
-  #     - software-properties-common
+- name: Create https firewall rule
+  ufw:
+    rule: allow
+    proto: tcp
+    port: "443"
 
-  # - name: Add Docker Community Edition GPG Key to host
-  #   apt_key:
-  #     url: https://download.docker.com/linux/ubuntu/gpg
-  #     state: present
+- name: Create plex port 32400 firewall rule
+  ufw:
+    rule: allow
+    proto: tcp
+    port: "32400"
 
-  # - name: Add Docker Community Edition repo
-  #   apt_repository:
-  #     repo: "deb https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-  #     state: present
+- name: Create plex port 3005 firewall rule
+  ufw:
+    rule: allow
+    proto: tcp
+    port: "3005"
 
-  # - name: Install required apt packages
-  #   apt:
-  #     name: "{{ item }}"
-  #     state: present
-  #   loop:
-  #     - acl
-  #     - bash-completion
-  #     - bc
-  #     - cockpit
-  #     - cockpit-doc
-  #     - cockpit-docker
-  #     - cockpit-machines
-  #     - cockpit-packagekit
-  #     - cockpit-pcp
-  #     - containerd.io
-  #     - ctop
-  #     - dialog
-  #     - dirmngr
-  #     - docker-ce
-  #     - docker-ce-cli
-  #     - elinks
-  #     - ethtool
-  #     - fail2ban
-  #     - figlet
-  #     - fuse
-  #     - gawk
-  #     - git
-  #     - glances
-  #     - hdparm
-  #     - htop
-  #     - iotop
-  #     - linux-tools-common
-  #     - lolcat
-  #     - lsb-release
-  #     - lsof
-  #     - man-db
-  #     - mc
-  #     - mlocate
-  #     - ncdu
-  #     - npm
-  #     - openssh-server
-  #     - pciutils
-  #     - psmisc
-  #     - pwgen
-  #     - python-apt
-  #     - python-lxml
-  #     - python-passlib
-  #     - python3
-  #     - python3-pip
-  #     - rar
-  #     - screen
-  #     - smartmontools
-  #     - sysfsutils
-  #     - sysstat
-  #     - tmux
-  #     - toilet
-  #     - tree
-  #     - unrar
-  #     - unzip
-  #     - update-notifier-common
-  #     - vnstat
-  #     - vnstati
-  #     - wget
-  #     - whois
-  #     - zip
-    
-  # - name: Install required pip packages
-  #   pip:
-  #     name: "{{ item }}"
-  #     state: present
-  #   loop:
-  #     - "docker-py"
-  #     - "netaddr"
-  #     - "pip"
-  #     - "pymysql"
-  #     - "setuptools"
+- name: Create plex port 8324 firewall rule
+  ufw:
+    rule: allow
+    proto: tcp
+    port: "8324"
 
-  # - name: copy .bashrc to folders
-  #   template:
-  #     src: "templates/skel/.bashrc.j2"
-  #     dest: "{{ item }}"
-  #   loop:
-  #     - "/etc/skel/.bashrc"
-  #     - "/home/{{ users.primary.user }}/.bashrc"
-  #     - "/home/{{ users.secondary.user }}/.bashrc"
-  #     - "/root/.bashrc"
+- name: Create cockpit port 9090 firewall rule
+  ufw:
+    rule: allow
+    to_ip: "172.18.0.1"
+    proto: tcp
+    port: "9090"
 
-  # - name: copy docker daemon to etc
-  #   template:
-  #     src: "templates/docker/daemon.json.j2"
-  #     dest: "/etc/docker/"
+- name: Deny everything and enable UFW
+  ufw:
+    state: enabled
+    policy: deny
+    logging: on 
 
-  # - name: copy motd to motd folder
-  #   copy:
-  #     src: "templates/update-motd.d"
-  #     dest: "/etc/"
-  
-  # - name: copy fail2ban conf to host
-  #   template:
-  #     src: "templates/fail2ban.conf.j2"
-  #     dest: "/etc/fail2ban/fail2ban.local"
-  #   loop:
-  #     - "fail2ban.conf"
-  
-  # - name: copy fail2ban jail conf to host
-  #   template:
-  #     src: "templates/jail.conf.j2"
-  #     dest: "/etc/fail2ban/jail.local"
-  
-  # - name: allow_other in fuse.conf
-  #   lineinfile: 
-  #     dest: "/etc/fuse.conf"
-  #     regexp: "#user_allow_other"
-  #     line: "user_allow_other"
-  #     state: present
+- name: Modify kernel domainname
+  lineinfile:
+    path: /etc/sysfs.conf
+    regexp: '^#kernel.domainname = example.com'
+    line: "kernel.domainname = {{ domain i}"
 
-  # - name: create primary network
-  #   docker_network:
-  #     name: "{{ networks.docker.primary.name }}"
-  #     driver: "{{ networks.docker.primary.driver }}"
-  #     ipam_config:
-  #       - subnet: "{{ networks.docker.primary.subnet }}"
-  #         gateway: "{{ networks.docker.primary.gateway }}"
+- name: Modify overcommit_memory settings
+  lineinfile:
+    path: /etc/sysctl.conf
+    line: "vm.overcommit_memory=1"
 
-  # - name: Disallow root SSH access
-  #   lineinfile: 
-  #     dest: "/etc/ssh/sshd_config"
-  #     regexp: "^PermitRootLogin"
-  #     line: "PermitRootLogin no"
-  #     state: present
-  
-  # - name: Disallow password authentication
-  #   lineinfile: 
-  #     dest: "/etc/ssh/sshd_config"
-  #     regexp: "^PasswordAuthentication"
-  #     line: "PasswordAuthentication no"
-  #     state: present
+- name: Disable Transparent Hugepages
+  lineinfile:
+    path: /etc/sysfs.conf
+    regexp: '^kernel\/mm\/transparent\_hugepage\/enabled'
+    line: "kernel/mm/transparent_hugepage/enabled = never"
 
-  # - name: create OpenSSH firewall rule
-  #   ufw:
-  #     state: enabled
-  #     rule: allow
-  #     name: OpenSSH
-
-  # - name: create http firewall rule
-  #   ufw:
-  #     rule: allow
-  #     proto: tcp
-  #     port: "80"
-
-  # - name: create https firewall rule
-  #   ufw:
-  #     rule: allow
-  #     proto: tcp
-  #     port: "443"
-
-  # - name: create plex port 32400 firewall rule
-  #   ufw:
-  #     rule: allow
-  #     proto: tcp
-  #     port: "32400"
-
-  # - name: create plex port 3005 firewall rule
-  #   ufw:
-  #     rule: allow
-  #     proto: tcp
-  #     port: "3005"
-
-  # - name: create plex port 8324 firewall rule
-  #   ufw:
-  #     rule: allow
-  #     proto: tcp
-  #     port: "8324"
-
-  # - name: create cockpit port 9090 firewall rule
-  #   ufw:
-  #     rule: allow
-  #     to_ip: "172.18.0.1"
-  #     proto: tcp
-  #     port: "9090"
-
-  # - name: Deny everything and enable UFW
-  #   ufw:
-  #     state: enabled
-  #     policy: deny
-  #     logging: on 
-
-# - name: Modify kernel domainname
-#   lineinfile:
-#     path: /etc/sysfs.conf
-#     regexp: '^#kernel.domainname = example.com'
-#     line: "kernel.domainname = {{ domain i}"
-
-# - name: Modify overcommit_memory settings
-#   lineinfile:
-#     path: /etc/sysctl.conf
-#     line: "vm.overcommit_memory=1"
-
-# - name: Disable Transparent Hugepages
-#   lineinfile:
-#     path: /etc/sysfs.conf
-#     regexp: '^kernel\/mm\/transparent\_hugepage\/enabled'
-#     line: "kernel/mm/transparent_hugepage/enabled = never"
-
-# - name: disable transparent huge pages for redis performance - live change
-#   shell: echo never {{ ">" }} /sys/kernel/mm/transparent_hugepage/enabled
+- name: Disable transparent huge pages for redis performance - live change
+  shell: echo never {{ ">" }} /sys/kernel/mm/transparent_hugepage/enabled
 ...

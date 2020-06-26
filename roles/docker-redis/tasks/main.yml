@@ -1,6 +1,5 @@
 ---
-  # Verify required directories with correct permissions are created
-- name: check dir ownership
+- name: Verify required directories with correct permissions are created
   file:
     recurse: yes
     path: "{{ directories.container_root }}/{{ item }}"
@@ -11,18 +10,14 @@
   loop:
     - "{{ containers.redis.subdomain }}/data"
 
-  # Verify templated required files with correct permissions are created
-- name: Adding Required Files
+- name: Verify templated required files with correct permissions are created
   template:
-    src: "templates/{{ item }}.j2"
-    dest: "{{ directories.container_root }}/{{ containers.redis.subdomain }}/{{ item }}"
+    src: "templates/redis.conf.j2"
+    dest: "{{ directories.container_root }}/{{ containers.redis.subdomain }}/redis.conf"
     owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
     mode: 0660
-  loop:
-    - "redis.conf"
 
-  # Standup the container in inventory
 - name: Start Redis
   docker_container:
     name: "{{ containers.redis.subdomain }}"
@@ -34,8 +29,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.redis.subdomain }}/redis.conf:/usr/local/etc/redis/redis.conf:z"
       - "{{ directories.container_root }}/{{ containers.redis.subdomain }}/data:/data:z"
     env:

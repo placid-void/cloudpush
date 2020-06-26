@@ -1,5 +1,4 @@
 ---
-  # Standup the container in inventory
 - name: Start Node Exporter
   docker_container:
     name: "{{ containers.node_exporter.subdomain }}"
