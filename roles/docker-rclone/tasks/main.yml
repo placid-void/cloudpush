@@ -1,5 +1,4 @@
 ---
-  # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
@@ -15,8 +14,7 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # Verify required directories with correct permissions are created
-- name: check dir ownership
+- name: Verify required directories with correct permissions are created
   file:
     recurse: yes
     path: "{{ item }}"
@@ -30,24 +28,30 @@
     - "/opt{{ directories.incomplete_dir }}"
     - "{{ directories.host_data_dir }}/{{ directories.cache_dir }}"
 
-  # Verify templated required files with correct permissions are created
-- name: Adding Required Files
+- name: Verify templated required files with correct permissions are created
   template:
     src: "templates/{{ item }}.j2"
     dest: "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/{{ item }}"
     owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
-    mode: 0660
+    mode: 0770
   loop:
     - "fuse.conf"
     - "rclone.conf"
+    - "rclone-checker.sh"
 
-#   # Verify mount point bind is not currently mounted
-# - name: Verify mount point is unmounted
-#   command:
-#     cmd: "umount -l {{ directories.data_dir }}/{{ directories.media_dir }}"
+- name: Creating required files with correct permissions are created
+  file:
+    path: "{{ directories.host_drive_root }}/.mountcheck"
+    state: touch
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0600
 
-  # Standup the container in inventory
+- name: Verify mount point bind is not currently mounted
+  command:
+    cmd: "fuzermount -uz {{ directories.host_drive_root }}"
+
 - name: Start RClone
   docker_container:
     name: "{{ containers.rclone.subdomain }}"
@@ -55,20 +59,22 @@
     state: started
     restart_policy: unless-stopped
     image: rclone/rclone:latest
-    # Mount required directories with the container
-    volumes:
+    healthcheck: 
+      interval: "1m"
+      start_period: "1m"
+      test: "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/rclone-checker.sh >/dev/null 2>&1"
+    volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}:/config/rclone:z"
       - "{{ directories.host_data_dir }}:{{ directories.data_dir }}:slave" # Mount data directory as slave
       - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:shared" # Mount drive root directory as shared
       - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/fuse.conf:/etc/fuse.conf:z" # Force "allow_other" option for FUSE
       - "/etc/passwd:/etc/passwd:ro" # Required for FUSE to work correctly
       - "/etc/group:/etc/group:ro" # Required for FUSE to work correctly
-    # Required capabilities for container to function properly
-    capabilities:
+    capabilities: # Required capabilities for container to function properly
       - "MKNOD"
       - "SYS_ADMIN"
-    # Startup command with options to mount Rclone
-    command: "mount {{ mount_options.drive }}:/Media {{ directories.drive_root }} --allow-other --allow-non-empty --fast-list --dir-cache-time={{ mount_options.dir_cache_time }} --drive-chunk-size={{ mount_options.drive_chunk_size }} --stats={{ mount_options.stats }} --stats-log-level={{ mount_options.stats_log_level }} --umask {{ mount_options.umask }} --log-level={{ mount_options.log_level }} --vfs-read-chunk-size-limit={{ mount_options.vfs_read_chunk_size_limit }} --vfs-cache-mode={{ mount_options.vfs_cache_mode }} --vfs-cache-max-age={{ mount_options.vfs_cache_max_age }} --vfs-cache-max-size {{ mount_options.max_size }} --user-agent={{ mount_options.user_agent }} --cache-dir={{ directories.data_dir }}/{{ directories.cache_dir }} --cache-writes --exclude *.partial~ --rc-web-gui --rc-web-fetch-url=https://api.github.com/repos/rclone/rclone-webui-react/releases/tags/v2.0.2 --rc-web-gui-update --rc-web-gui-no-open-browser"
+    # Startup command with options to mount Rclone # Added auto_unmount option to mount command, not tested
+    command: "mount {{ mount_options.drive }}:/Media {{ directories.drive_root }} --auto_unmount --allow-other --allow-non-empty --fast-list --dir-cache-time={{ mount_options.dir_cache_time }} --drive-chunk-size={{ mount_options.drive_chunk_size }} --stats={{ mount_options.stats }} --stats-log-level={{ mount_options.stats_log_level }} --umask {{ mount_options.umask }} --log-level={{ mount_options.log_level }} --vfs-read-chunk-size-limit={{ mount_options.vfs_read_chunk_size_limit }} --vfs-cache-mode={{ mount_options.vfs_cache_mode }} --vfs-cache-max-age={{ mount_options.vfs_cache_max_age }} --vfs-cache-max-size {{ mount_options.max_size }} --user-agent={{ mount_options.user_agent }} --cache-dir={{ directories.data_dir }}/{{ directories.cache_dir }} --cache-writes --exclude *.partial~ --rc-web-gui --rc-web-fetch-url=https://api.github.com/repos/rclone/rclone-webui-react/releases/tags/v2.0.2 --rc-web-gui-update --rc-web-gui-no-open-browser"
     # Pass FUSE to the container
     devices: "/dev/fuse"
     env:
