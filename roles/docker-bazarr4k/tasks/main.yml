@@ -52,7 +52,7 @@
     # Mount required directories with the container
     volumes:
       - "{{ directories.container_root }}/{{ containers.bazarr4k.subdomain }}:/config:z"
-      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:z"
+      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:sharedz"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container

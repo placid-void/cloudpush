@@ -42,7 +42,7 @@
   # - docker-lazylibrarian
   # - docker-lidarr
   # - docker-mylar
-  - docker-nextcloud
+  # - docker-nextcloud
   # - docker-speedtest
   # - docker-radarr
   # - docker-radarr4k

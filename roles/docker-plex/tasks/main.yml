@@ -64,7 +64,7 @@
     # Mount required directories with the container
     volumes:
       - "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}:/config:z"
-      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:z"
+      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:sharedz"
     env:
       PLEX_UID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PLEX_GID: "{{ users.primary.gid }}" # Pass proper GID to the container

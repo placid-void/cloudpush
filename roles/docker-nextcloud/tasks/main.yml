@@ -54,7 +54,7 @@
     # Mount required directories with the container
     volumes:
       - "{{ directories.container_root }}/{{ containers.nextcloud.subdomain }}:/config:z"
-      - "{{ directories.host_data_dir }}:{{ directories.data_dir }}:z"
+      - "{{ directories.host_data_dir }}:{{ directories.data_dir }}:shared"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container

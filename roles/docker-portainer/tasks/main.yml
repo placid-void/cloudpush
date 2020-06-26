@@ -41,7 +41,7 @@
     # Mount required directories with the container
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:z"
-      - "{{ directories.container_root }}/{{ containers.portainer.subdomain }}:{{ directories.data_dir }}:z"
+      - "{{ directories.container_root }}/{{ containers.portainer.subdomain }}:{{ directories.data_dir }}:shared"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container

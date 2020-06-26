@@ -44,7 +44,7 @@
     volumes:
       - "{{ directories.container_root }}/{{ containers.tdarr.subdomain }}:/config:z"
       - "{{ directories.container_root }}/{{ containers.tdarr.subdomain }}/mongodb:/var/lib/mongodb:z"
-      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:z"
+      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:sharedz"
     env:
       DATA: "/config"
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container

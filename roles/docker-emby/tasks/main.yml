@@ -48,7 +48,7 @@
     # Mount required directories with the container
     volumes:
       - "{{ directories.container_root }}/{{ containers.emby.subdomain }}:/config:z"
-      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:z"
+      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:sharedz"
     env:
       UID: "{{ users.primary.uid }}" # Pass proper UID to the container
       GID: "{{ users.primary.gid }}" # Pass proper GID to the container
