@@ -1,23 +1,21 @@
 ---
-# - name: check dir ownership
-#   file:
-#     recurse: yes
-#     path: "{{ directories.container_root }}/{{ containers.varken.subdomain }}"
-#     state: directory
-#     setype: container_file_t
-#     owner: "{{ users.primary.user }}"
-#     group: "{{ users.primary.group }}"
+- name: Verify required directories with correct permissions are created
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ containers.varken.subdomain }}"
+    state: directory
+    setype: container_file_t
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
 
-#   # Verify templated required files with correct permissions are created
-# - name: Adding varken.ini template file
-#   template:
-#     src: "templates/varken.ini.j2"
-#     dest: "{{ directories.container_root }}/{{ containers.varken.subdomain }}/varken.ini"
-#     owner: "{{ users.primary.user }}"
-#     group: "{{ users.primary.group }}"
-#     mode: 0660
+- name: Verify templated required files with correct permissions are created
+  template:
+    src: "templates/varken.ini.j2"
+    dest: "{{ directories.container_root }}/{{ containers.varken.subdomain }}/varken.ini"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0660
 
-  # Standup the container in inventory
 - name: Start Varken
   docker_container:
     name: "{{ containers.varken.subdomain }}"
@@ -27,22 +25,10 @@
     image: boerderij/varken
     links: # Prevent container creation and startup until linked containers are running
     - "{{ containers.influxdb.subdomain }}:{{ containers.influxdb.subdomain }}"
-    - "{{ containers.lidarr.subdomain }}:{{ containers.lidarr.subdomain }}"
-    - "{{ containers.ombi.subdomain.0 }}:{{ containers.ombi.subdomain.0 }}"
-    - "{{ containers.ombi4k.subdomain.0 }}:{{ containers.ombi4k.subdomain.0 }}"
-    - "{{ containers.radarr.subdomain }}:{{ containers.radarr.subdomain }}"
-    - "{{ containers.radarr4k.subdomain }}:{{ containers.radarr4k.subdomain }}"
-    - "{{ containers.sonarr.subdomain }}:{{ containers.sonarr.subdomain }}"
-    - "{{ containers.sonarr4k.subdomain }}:{{ containers.sonarr4k.subdomain }}"
-    - "{{ containers.tautulli.subdomain }}:{{ containers.tautulli.subdomain }}"
     log_driver: "json-file"
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    # volumes:
-    #   - "{{ directories.container_root }}/{{ containers.varken.subdomain }}:/config:z"
-    #   - "{{ directories.container_root }}/{{ containers.influxdb.subdomain }}:/var/lib/influxdb:z" # Mount InfluxDB to container for database connection
     # Varken user details
     user: "{{ users.primary.uid }}:{{ users.primary.gid }}"
     env:
