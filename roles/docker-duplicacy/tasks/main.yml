@@ -1,5 +1,4 @@
 ---
-  # DNS Record Creation for hostname of container
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
     account_api_token: "{{ cloudflare.api }}"
@@ -15,8 +14,7 @@
     - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
-  # Verify required directories with correct permissions are created
-- name: check dir ownership
+- name: Verify required directories with correct permissions are created
   file:
     recurse: yes
     path: "{{ directories.container_root }}/{{ item }}"
@@ -30,8 +28,7 @@
     - "{{ containers.duplicacy.subdomain }}/filters"
     - "{{ containers.duplicacy.subdomain }}/filters/{{ containers.duplicacy.subdomain }}"
 
-  # Verify templated required files with correct permissions are created
-- name: Adding Required Files
+- name: Verify templated required files with correct permissions are created
   template:
     src: "templates/{{ item }}.j2"
     dest: "{{ directories.container_root }}/{{ containers.duplicacy.subdomain }}/{{ item }}"
@@ -39,21 +36,20 @@
     group: "{{ users.primary.group }}"
     mode: 0660
   loop:
+    - "backup-sources.txt"
     - "gcd-token.json"
     - "duplicacy.json"
     - "licenses.json"
     - "settings.json"
 
-  # Verify required files with correct permissions are created
-- name: Copy required files to container folders
-  copy:
-    src: "files/backup-sources.txt"
+- name: Verify templated required files with correct permissions are created
+  template:
+    src: "templates/backup-sources.txt.j2"
     dest: "{{ directories.container_root }}/{{ containers.duplicacy.subdomain }}/filters/{{ containers.duplicacy.subdomain }}/0"
     owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
     mode: 0660
 
-  # Standup the container in inventory
 - name: Start Duplicacy
   docker_container:
     name: "{{ containers.duplicacy.subdomain }}"
@@ -65,8 +61,7 @@
     log_options:
       max-size: "12m"
       max-file: "3"
-    # Mount required directories with the container
-    volumes:
+    volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.duplicacy.subdomain }}:/etc/duplicacy:z"
       - "{{ directories.container_root }}/{{ containers.duplicacy.subdomain }}/cache:/var/cache/duplicacy:z"
       - "{{ directories.container_root }}:{{ directories.container_root }}:ro"
