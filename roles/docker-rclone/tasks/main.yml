@@ -40,14 +40,6 @@
     - "rclone.conf"
     - "rclone-checker.sh"
 
-- name: Creating required files with correct permissions are created
-  file:
-    path: "{{ directories.host_drive_root }}/.mountcheck"
-    state: touch
-    owner: "{{ users.primary.user }}"
-    group: "{{ users.primary.group }}"
-    mode: 0600
-
 - name: Verify mount point bind is not currently mounted
   command:
     cmd: "fuzermount -uz {{ directories.host_drive_root }}"
@@ -59,10 +51,6 @@
     state: started
     restart_policy: unless-stopped
     image: rclone/rclone:latest
-    healthcheck: 
-      interval: "1m"
-      start_period: "1m"
-      test: "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/rclone-checker.sh >/dev/null 2>&1"
     volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}:/config/rclone:z"
       - "{{ directories.host_data_dir }}:{{ directories.data_dir }}:slave" # Mount data directory as slave
@@ -74,7 +62,7 @@
       - "MKNOD"
       - "SYS_ADMIN"
     # Startup command with options to mount Rclone # Added auto_unmount option to mount command, not tested
-    command: "mount {{ mount_options.drive }}:/Media {{ directories.drive_root }} --allow-non-empty --allow-other --auto_unmount --fast-list --dir-cache-time={{ mount_options.dir_cache_time }} --drive-chunk-size={{ mount_options.drive_chunk_size }} --stats={{ mount_options.stats }} --stats-log-level={{ mount_options.stats_log_level }} --umask {{ mount_options.umask }} --log-level={{ mount_options.log_level }} --vfs-read-chunk-size-limit={{ mount_options.vfs_read_chunk_size_limit }} --vfs-cache-mode={{ mount_options.vfs_cache_mode }} --vfs-cache-max-age={{ mount_options.vfs_cache_max_age }} --vfs-cache-max-size {{ mount_options.max_size }} --user-agent={{ mount_options.user_agent }} --cache-dir={{ directories.data_dir }}/{{ directories.cache_dir }} --cache-writes --rc-web-gui --rc-web-fetch-url=https://api.github.com/repos/rclone/rclone-webui-react/releases/tags/v2.0.2 --rc-web-gui-update --rc-web-gui-no-open-browser"
+    command: "mount {{ mount_options.drive }}:/Media {{ directories.drive_root }} --allow-non-empty --allow-other --fast-list --dir-cache-time={{ mount_options.dir_cache_time }} --drive-chunk-size={{ mount_options.drive_chunk_size }} --stats={{ mount_options.stats }} --stats-log-level={{ mount_options.stats_log_level }} --umask {{ mount_options.umask }} --log-level={{ mount_options.log_level }} --vfs-read-chunk-size-limit={{ mount_options.vfs_read_chunk_size_limit }} --vfs-cache-mode={{ mount_options.vfs_cache_mode }} --vfs-cache-max-age={{ mount_options.vfs_cache_max_age }} --vfs-cache-max-size {{ mount_options.max_size }} --user-agent={{ mount_options.user_agent }} --cache-dir={{ directories.data_dir }}/{{ directories.cache_dir }} --cache-writes --rc-web-gui --rc-web-fetch-url=https://api.github.com/repos/rclone/rclone-webui-react/releases/tags/v2.0.2 --rc-web-gui-update --rc-web-gui-no-open-browser"
     # Pass FUSE to the container
     devices: "/dev/fuse"
     env:
@@ -82,7 +70,6 @@
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
       # RCLONE_ALLOW_NON_EMPTY: "{{ mount_options.allow_non_empty }}"
       # RCLONE_ALLOW_OTHER: "{{ mount_options.allow_other }}"
-      # RCLONE_AUTO_UNMOUNT: "{{ mount_options.auto_unmount }}"
       # RCLONE_CACHE_DB_PURGE: "{{ mount_options.cache_settings.db_purge }}"
       # RCLONE_CACHE_DIR: "{{ mount_options.cache_settings.tmp_upload_path }}"
       # RCLONE_CACHE_WORKERS: "{{ mount_options.cache_settings.cache_workers }}"
@@ -133,4 +120,12 @@
       traefik.http.services.rclone-svc.loadbalancer.server.port: "{{ containers.rclone.port | default('80') }}"
       ## Middlewares
       traefik.http.routers.rclone-rtr.middlewares: "chain-oauth@file"
+
+- name: Creating required files with correct permissions are created
+  file:
+    path: "{{ directories.host_drive_root }}/.mountcheck"
+    state: touch
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0600
 ...
