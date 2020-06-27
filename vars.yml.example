@@ -439,7 +439,6 @@ mail:
 mount_options:
   allow_non_empty: "true"
   allow_other: "true"
-  auto_unmount: "true"
   bwlimit: 70M
   checkers: "4"
   cleaner: "600"
