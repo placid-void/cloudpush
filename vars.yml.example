@@ -140,11 +140,6 @@ containers:
     port: "8086"
     subdomain: "influxdb"
     tld: "{{ domain }}"
-  jellyfin:
-    network: "{{ networks.docker.primary.name }}"
-    port: "8096"
-    subdomain: "jellyfin"
-    tld: "{{ domain }}"
   lazylibrarian:
     network: "{{ networks.docker.primary.name }}"
     port: "5299"
@@ -218,13 +213,22 @@ containers:
     tld: "{{ domain }}"
   plex:
     network: "{{ networks.docker.primary.name }}"
-    port: "32400"
-    subdomain: "plex"
+    port: 
+      0: "32400" # Plex Server Port
+      1: "33400" # Plex WebTools Port
+    subdomain: 
+      0: "plex" # Plex Server subdomain
+      1: "plex-tools" # Plex WebTools subdomain
     tld: "{{ domain }}"
   portainer:
     network: "{{ networks.docker.primary.name }}"
     port: "9000"
     subdomain: "portainer"
+    tld: "{{ domain }}"
+  postgresql:
+    network: "{{ networks.docker.primary.name }}"
+    port: "5432"
+    subdomain: "postgresql"
     tld: "{{ domain }}"
   privoxy:
     network: "{{ networks.docker.primary.name }}"
@@ -235,6 +239,11 @@ containers:
     network: "{{ networks.docker.primary.name }}"
     port: "9090"
     subdomain: "prometheus"
+    tld: "{{ domain }}"
+  promgen:
+    network: "{{ networks.docker.primary.name }}"
+    port: "8000"
+    subdomain: "promgen"
     tld: "{{ domain }}"
   radarr:
     network: "{{ networks.docker.primary.name }}"
@@ -274,6 +283,13 @@ containers:
   speedtest:
     network: "{{ networks.docker.primary.name }}"
     subdomain: "speedtest"
+    tld: "{{ domain }}"
+  statping:
+    network: "{{ networks.docker.primary.name }}"
+    port: "8080"
+    subdomain:
+      0: "statping" # Program subdomain for apps to communicate
+      1: "status" # Public subdomain for users to access
     tld: "{{ domain }}"
   syncarr_radarr:
     network: "{{ networks.docker.primary.name }}"
@@ -382,7 +398,7 @@ cloudflare:
 api_keys:
   lazylibrarian: "{{ lookup('lastpass', '****/Lazy Librarian', field='api') }}"
   lidarr: "{{ lookup('lastpass', '****/Lidarr', field='api') }}"
-  maxmind: "{{ lookup('lastpass', 'Homelab/maxmind.com', field='lisense') }}"
+  maxmind: "{{ lookup('lastpass', '****/maxmind.com', field='lisense') }}"
   nzbhydra: "{{ lookup('lastpass', '****/NZBHydra', field='api') }}"
   ombi: "{{ lookup('lastpass', '****/Ombi', field='api') }}"
   ombi4k: "{{ lookup('lastpass', '****/Ombi4K', field='api') }}"
@@ -392,6 +408,13 @@ api_keys:
   sonarr: "{{ lookup('lastpass', '****/Sonarr', field='api') }}"
   sonarr4k: "{{ lookup('lastpass', '****/Sonarr4K', field='api') }}"
   tautulli: "{{ lookup('lastpass', '****/Tautulli', field='api') }}"
+  dev: 
+    ombi: "{{ lookup('lastpass', '****/Ombi', field='api') }}"
+    ombi4k: "{{ lookup('lastpass', '****/Ombi4K', field='api') }}"
+    radarr: "{{ lookup('lastpass', '****/Radarr', field='api') }}"
+    radarr4k: "{{ lookup('lastpass', '****/Radarr4K', field='api') }}"
+    sonarr: "{{ lookup('lastpass', '****/Sonarr', field='api') }}"
+    sonarr4k: "{{ lookup('lastpass', '****/Sonarr4K', field='api') }}"
 
 # Oauth container vars
 oauth:
@@ -416,6 +439,7 @@ mail:
 mount_options:
   allow_non_empty: "true"
   allow_other: "true"
+  auto_unmount: "true"
   bwlimit: 70M
   checkers: "4"
   cleaner: "600"
@@ -424,7 +448,7 @@ mount_options:
   drive_chunk_size: 64M
   fast_list: "true"
   log_level: "INFO"
-  max_size: "200G"
+  max_size: "100G"
   rc: "true"
   rc_pass: "{{ lookup('lastpass', '****/Rclone', field='password') }}"
   rc_serve: "true"
@@ -447,10 +471,7 @@ mount_options:
     cache_workers: "6"
     cache_writes: "true"
     db_purge: "false"
-    exclude: "**.partial~"
-    info_age: "36h"
-    tmp_wait_time: "15m"
-    tmp_upload_path: "/data/cache/"
+    info_age: "168h"
     workers: "6"
 
 # Rclone specific vars
@@ -497,12 +518,27 @@ duplicacy:
 # MariaDB specific vars
 mariadb:
   bookstack_passwd: "{{ lookup('lastpass', '****/bookstack.mariadb', field='password') }}"
+  cloudbeaver_passwd: "{{ lookup('lastpass', '****/cloudbeaver.mariadb', field='password') }}"
   grafana_passwd: "{{ lookup('lastpass', '****/grafana.mariadb', field='password') }}"
   mariadb_passwd: "{{ lookup('lastpass', '****/MariaDB', field='password') }}"
   nextcloud_passwd: "{{ lookup('lastpass', '****/nextcloud.mariadb', field='password') }}"
+  promgen_passwd: "{{ lookup('lastpass', '****/promgen.mariadb', field='password') }}"
+  statping_passwd: "{{ lookup('lastpass', '****/statping.mariadb', field='password') }}"
   login_host: "{{ containers.mariadb.subdomain }}"
   login_port: "{{ containers.mariadb.port }}"
   login_user: "{{ lookup('lastpass', '****/MariaDB', field='username') }}"
+
+# PostgreSQL specific vars
+postgresql:
+  bookstack_passwd: "{{ lookup('lastpass', '****/bookstack.postgresql', field='password') }}"
+  grafana_passwd: "{{ lookup('lastpass', '****/grafana.postgresql', field='password') }}"
+  mariadb_passwd: "{{ lookup('lastpass', '****/PostgreSQL', field='password') }}"
+  nextcloud_passwd: "{{ lookup('lastpass', '****/nextcloud.postgresql', field='password') }}"
+  promgen_passwd: "{{ lookup('lastpass', '****/promgen.postgresql', field='password') }}"
+  statping_passwd: "{{ lookup('lastpass', '****/statping.postgresql', field='password') }}"
+  login_host: "{{ containers.postgresql.subdomain }}"
+  login_port: "{{ containers.postgresql.port }}"
+  login_user: "{{ lookup('lastpass', '****/PostgreSQL', field='username') }}"
 
 # Nextcoud specific vars
 nextcloud:
@@ -637,6 +673,7 @@ synclounge:
 # Cloudbeaver vars
 cloudbeaver:
   password: "{{ lookup('lastpass', '****/Cloudbeaver', field='password') }}"
+  username: "{{ lookup('lastpass', '****/Cloudbeaver', field='username') }}"
 
 # StatPing vars
 statping:
@@ -649,5 +686,6 @@ statping:
 # Redis vars
 redis:
   password: "{{ lookup('lastpass', '****/Redis', field='password') }}"
+  secret_key: "{{ lookup('lastpass', '****/Redis', field='secret_key') }}"
   username: "{{ lookup('lastpass', '****/Redis', field='username') }}"
 ...
