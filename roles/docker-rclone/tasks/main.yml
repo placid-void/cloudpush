@@ -74,7 +74,7 @@
       - "MKNOD"
       - "SYS_ADMIN"
     # Startup command with options to mount Rclone # Added auto_unmount option to mount command, not tested
-    command: "mount {{ mount_options.drive }}:/Media {{ directories.drive_root }} --auto_unmount --allow-other --allow-non-empty --fast-list --dir-cache-time={{ mount_options.dir_cache_time }} --drive-chunk-size={{ mount_options.drive_chunk_size }} --stats={{ mount_options.stats }} --stats-log-level={{ mount_options.stats_log_level }} --umask {{ mount_options.umask }} --log-level={{ mount_options.log_level }} --vfs-read-chunk-size-limit={{ mount_options.vfs_read_chunk_size_limit }} --vfs-cache-mode={{ mount_options.vfs_cache_mode }} --vfs-cache-max-age={{ mount_options.vfs_cache_max_age }} --vfs-cache-max-size {{ mount_options.max_size }} --user-agent={{ mount_options.user_agent }} --cache-dir={{ directories.data_dir }}/{{ directories.cache_dir }} --cache-writes --exclude *.partial~ --rc-web-gui --rc-web-fetch-url=https://api.github.com/repos/rclone/rclone-webui-react/releases/tags/v2.0.2 --rc-web-gui-update --rc-web-gui-no-open-browser"
+    command: "mount {{ mount_options.drive }}:/Media {{ directories.drive_root }} --allow-non-empty --allow-other --auto_unmount --fast-list --dir-cache-time={{ mount_options.dir_cache_time }} --drive-chunk-size={{ mount_options.drive_chunk_size }} --stats={{ mount_options.stats }} --stats-log-level={{ mount_options.stats_log_level }} --umask {{ mount_options.umask }} --log-level={{ mount_options.log_level }} --vfs-read-chunk-size-limit={{ mount_options.vfs_read_chunk_size_limit }} --vfs-cache-mode={{ mount_options.vfs_cache_mode }} --vfs-cache-max-age={{ mount_options.vfs_cache_max_age }} --vfs-cache-max-size {{ mount_options.max_size }} --user-agent={{ mount_options.user_agent }} --cache-dir={{ directories.data_dir }}/{{ directories.cache_dir }} --cache-writes --rc-web-gui --rc-web-fetch-url=https://api.github.com/repos/rclone/rclone-webui-react/releases/tags/v2.0.2 --rc-web-gui-update --rc-web-gui-no-open-browser"
     # Pass FUSE to the container
     devices: "/dev/fuse"
     env:
@@ -82,10 +82,9 @@
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
       # RCLONE_ALLOW_NON_EMPTY: "{{ mount_options.allow_non_empty }}"
       # RCLONE_ALLOW_OTHER: "{{ mount_options.allow_other }}"
+      # RCLONE_AUTO_UNMOUNT: "{{ mount_options.auto_unmount }}"
       # RCLONE_CACHE_DB_PURGE: "{{ mount_options.cache_settings.db_purge }}"
       # RCLONE_CACHE_DIR: "{{ mount_options.cache_settings.tmp_upload_path }}"
-      # RCLONE_CACHE_TMP_UPLOAD_PATH: "{{ mount_options.cache_settings.tmp_upload_path }}"
-      # RCLONE_CACHE_TMP_WAIT_TIME: "{{ mount_options.cache_settings.tmp_wait_time }}"
       # RCLONE_CACHE_WORKERS: "{{ mount_options.cache_settings.cache_workers }}"
       # RCLONE_CACHE_WRITES: "{{ mount_options.cache_settings.cache_writes }}"
       # RCLONE_CONFIG_DRIVE_CLIENT_ID: "{{ rclone.client_id }}"
@@ -94,7 +93,6 @@
       # RCLONE_CONFIG_DRIVE_TYPE: "drive"
       # RCLONE_DIR_CACHE_TIME: "{{ mount_options.dir_cache_time }}"
       # RCLONE_DRIVE_CHUNK_SIZE: "{{ mount_options.drive_chunk_size }}"
-      # RCLONE_EXCLUDE: "{{ mount_options.cache_settings.exclude }}"
       # RCLONE_FAST_LIST: "{{ mount_options.fast_list }}"
       # RCLONE_LOG_LEVEL: "{{ mount_options.log_level }}"
       # RCLONE_RC: "{{ mount_options.rc }}"
