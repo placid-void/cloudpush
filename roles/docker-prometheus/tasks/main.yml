@@ -50,6 +50,7 @@
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      TZ: "{{ timezone }}"
     command: "-config.file=/etc/prometheus/prometheus.yml -storage.local.path=/prometheus"
     networks_cli_compatible: no
     networks:

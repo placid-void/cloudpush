@@ -65,6 +65,7 @@
       CELERY_BROKER_URL: "redis://{{ redis.username }}:{{ redis.password }}@{{ containers.redis.subdomain }}:{{ containers.redis.port }}/0"
       DATABASE_URL: "mysql://{{ containers.promgen.subdomain }}:{{ mariadb.promgen_passwd }}@{{ containers.mariadb.subdomain }}:{{ containers.mariadb.port }}/{{ containers.promgen.subdomain }}"
       SECRET_KEY: "{{ redis.secret_key }}"
+      TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

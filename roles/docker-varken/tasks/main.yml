@@ -34,6 +34,7 @@
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      TZ: "{{ timezone }}"
       VRKN_GLOBAL_LIDARR_SERVER: "1"
       VRKN_GLOBAL_MAXMIND_LICENSE_KEY: "{{ api_keys.maxmind }}"
       VRKN_GLOBAL_OMBI_SERVER_IDS: "1,2"

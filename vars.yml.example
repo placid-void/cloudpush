@@ -3,6 +3,8 @@
 control_domain_name: example.com
 # Public domain of the project
 domain: example2.com
+# Timezone
+timezone: "America/Chicago"
 
 # User details
 users:

@@ -16,6 +16,7 @@
       - "/etc:/etc:z"
     env:
       REMOVE_VOLUMES: "1" # Should GC Remove abandoned volumes?
+      TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

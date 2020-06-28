@@ -72,6 +72,7 @@
       VPN_PASS: "{{ deluge.vpn_pass }}" # VPN Password
       VPN_PROV: "{{ deluge.vpn_prov }}" # VPN Provider
       VPN_USER: "{{ deluge.vpn_user }}" # VPN Username
+      TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

@@ -71,6 +71,8 @@
       - "{{ directories.container_root }}/{{ containers.sonarr.subdomain }}/sonarr.db:/app/workspace/GlobalConfiguration/db/sonarr.db:z"
       - "{{ directories.container_root }}/{{ containers.sonarr4k.subdomain }}/sonarr.db:/app/workspace/GlobalConfiguration/db/sonarr4k.db:z"
       - "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/tautulli.db:/app/workspace/GlobalConfiguration/db/tautulli.db:z"
+    env: 
+      TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

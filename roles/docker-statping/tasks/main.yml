@@ -60,7 +60,7 @@
       NAME: "{{ statping.name }}"
       PREFIX: "{{ statping.prefix }}" # A Prefix for each value in Prometheus /metric exporter
       STATPING_DIR: "/config"
-      TZ: "Canada/Montreal"
+      TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

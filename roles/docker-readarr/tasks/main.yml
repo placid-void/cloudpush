@@ -43,6 +43,7 @@
       DEBUG: "yes"
       PUID: "{{ users.primary.uid }}"
       PGID: "{{ users.primary.gid }}"
+      TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

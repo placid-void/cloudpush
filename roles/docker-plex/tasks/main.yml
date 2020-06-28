@@ -64,6 +64,7 @@
       PLEX_UID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PLEX_GID: "{{ users.primary.gid }}" # Pass proper GID to the container
       UMASK: "{{ mount_options.umask }}" # File UMASK
+      TZ: "{{ timezone }}"
     devices: "{{ '/dev/dri:/dev/dri' if dev_dri.stat.exists == True | default(False) else omit }}" # Pass GPU to the container, if it exists
     etc_hosts: # Block Plex Spying
       { 'analytics.plex.tv': '127.0.0.1', 'metrics.plex.tv': '127.0.0.1' }

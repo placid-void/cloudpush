@@ -96,6 +96,7 @@
       # RCLONE_VFS_CACHE_MAX_SIZE: "{{ mount_options.max_size }}"
       # RCLONE_VFS_CACHE_MODE: "{{ mount_options.vfs_cache_mode }}"
       # RCLONE_VFS_READ_CHUNK_SIZE: "{{ mount_options.vfs_read_chunk_size_limit }}"
+      TZ: "{{ timezone }}"
     # Required security options for  container to function properly
     security_opts: "apparmor:unconfined"
     # Rclone user details

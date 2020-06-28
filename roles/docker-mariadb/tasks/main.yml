@@ -28,6 +28,7 @@
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
       MYSQL_ROOT_PASSWORD: "{{ mariadb.mariadb_passwd }}" # MariaDB Root Password
+      TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

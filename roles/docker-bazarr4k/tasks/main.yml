@@ -52,6 +52,7 @@
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
       UMASK: "{{ mount_options.umask }}" # File UMASK
+      TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

@@ -28,6 +28,7 @@
       SYNCARR_BIDIRECTIONAL_SYNC: "1" # Should Syncarr sync between both servers?
       SYNCARR_AUTO_SEARCH: "1" # Should Syncarr search on add?
       SYNCARR_MONITOR_NEW_CONTENT: "1" # Should new content be monitored?
+      TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

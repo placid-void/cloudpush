@@ -42,6 +42,7 @@
       DATA: "/config"
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      TZ: "{{ timezone }}"
       UMASK: "{{ mount_options.umask }}" # File UMASK
     networks_cli_compatible: no
     networks:

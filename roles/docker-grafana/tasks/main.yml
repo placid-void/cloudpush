@@ -110,6 +110,7 @@
       INFLUX_URL: "{{ containers.influxdb.subdomain }}:{{ containers.influxdb.port }}"
       PUID: "{{ users.grafana.uid }}" # Pass proper UID to the container
       PGID: "{{ users.grafana.gid }}" # Pass proper GID to the container
+      TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

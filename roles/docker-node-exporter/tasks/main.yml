@@ -10,6 +10,8 @@
     log_options:
       max-size: "12m"
       max-file: "3"
+    env: 
+      TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

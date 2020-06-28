@@ -40,6 +40,7 @@
     - "cont-init.d/30-config"
     - "installer/installer.sh"
     - "nzbget.conf"
+    - "scripts/Completion.py"
     - "services.d/run"
 
 - name: Start NZBGet
@@ -63,6 +64,7 @@
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
       UMASK: "{{ mount_options.umask }}" # File UMASK
+      TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

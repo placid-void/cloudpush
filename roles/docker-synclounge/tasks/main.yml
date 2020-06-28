@@ -50,6 +50,7 @@
       DOMAIN: "{{ containers.synclounge.subdomain }}.{{ containers.synclounge.tld }}" # Domain
       PGID: "{{ users.primary.gid }}" # Pass proper UID to the container
       PUID: "{{ users.primary.uid }}" # Pass proper GID to the container
+      TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

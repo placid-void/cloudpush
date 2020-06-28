@@ -31,6 +31,7 @@
       INFLUXDB_REPORTING_DISABLED: "{{ influxdb.reporting }}"
       INFLUXDB_USER: "{{ influxdb.username }}"
       INFLUXDB_USER_PASSWORD: "{{ influxdb.password }}"
+      TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ networks.docker.primary.name }}"

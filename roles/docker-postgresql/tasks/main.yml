@@ -42,6 +42,7 @@
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
       POSTGRES_PASSWORD: "{{ postgresql.postgresql_passwd }}" # PostgreSQL Root Password
+      TZ: "{{ timezone }}"
     # PostgreSQL user details
     user: "{{ users.primary.uid }}:{{ users.primary.gid }}"
     networks_cli_compatible: no

@@ -33,15 +33,16 @@
       volumes: # Mount required directories with the container
         - "{{ directories.container_root }}/{{ containers.traktarr.subdomain }}:/config:z"
       env:
-        PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
-        PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
-        SORT: "rating" # How to sort results
+        APP_BRANCH: "master"
+        BLACKLIST: "yes" # Enable blacklist
         NOSEARCH: "no" # Should *arr search for item on add
         NOTIFICATIONS: "no" # Send notifications
-        BLACKLIST: "yes" # Enable blacklist
+        PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+        PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
         RUNNOW: "yes" # Run on container startup
         SKIPUPDATE: "no"
-        APP_BRANCH: "master"
+        SORT: "rating" # How to sort results
+        TZ: "{{ timezone }}"
       networks_cli_compatible: no
       networks:
         - name: "{{ networks.docker.primary.name }}"
