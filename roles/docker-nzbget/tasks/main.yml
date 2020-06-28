@@ -16,48 +16,31 @@
 
 - name: Verify required directories with correct permissions are created
   file:
-    recurse: yes
-    path: "{{ directories.container_root }}/{{ item }}"
-    owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
-    state: directory
+    owner: "{{ users.primary.user }}"
+    path: "{{ directories.container_root }}/{{ item }}"
+    recurse: yes
     setype: container_file_t
+    state: directory
   loop:
     - "{{ containers.nzbget.subdomain }}/cont-init.d"
     - "{{ containers.nzbget.subdomain }}/installer"
     - "{{ containers.nzbget.subdomain }}/nzbs"
     - "{{ containers.nzbget.subdomain }}/scripts"
-    - "{{ containers.nzbget.subdomain }}/scripts/MP4_Automator"
     - "{{ containers.nzbget.subdomain }}/services.d"
-
-- name: Verify required files with correct permissions are created
-  copy:
-    src: "files/{{ item }}"
-    dest: "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}/{{ item }}"
-    owner: "{{ users.primary.user }}"
-    group: "{{ users.primary.group }}"
-    mode: 0550
-  loop:
-    - cont-init.d/30-config
-    - installer/installer.sh
-    - installer/web-install.sh
-    - scripts/DeleteSamples.py
-    - scripts/FakeDetector.py
-    - scripts/Flatten.py
-    - scripts/PasswordDetector.py
-    - scripts/ReverseName.py
-    - services.d/run
 
 - name: Verify templated required files with correct permissions are created
   template:
-    src: "templates/{{ item }}.j2"
     dest: "{{ directories.container_root }}/{{ containers.nzbget.subdomain }}/{{ item }}"
-    owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
-    mode: 0660
+    mode: 0770
+    owner: "{{ users.primary.user }}"
+    src: "templates/{{ item }}.j2"
   loop:
-    - "scripts/MP4_Automator/autoProcess.ini"
+    - "cont-init.d/30-config"
+    - "installer/installer.sh"
     - "nzbget.conf"
+    - "services.d/run"
 
 - name: Start NZBGet
   docker_container:

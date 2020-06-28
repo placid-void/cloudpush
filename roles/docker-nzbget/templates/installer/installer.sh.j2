@@ -1,0 +1,29 @@
+#!/bin/bash
+apk update
+apk upgrade
+apk add --no-cache git
+apk add build-base gcc wget diffutils perl python2-dev py3-wheel
+apk add curl
+git clone https://github.com/nzbget/FakeDetector.git /config/scripts/FakeDetector/tmp
+cp -r /config/scripts/FakeDetector/tmp/* /config/scripts/FakeDetector
+rm -rf /config/scripts/FakeDetector/tmp
+git clone https://github.com/clinton-hall/GetScripts.git /config/scripts/GetScripts/tmp
+cp -r /config/scripts/GetScripts/tmp/* /config/scripts/GetScripts
+rm -rf /config/scripts/GetScripts/tmp
+git clone https://github.com/JVMed/PasswordDetector.git /config/scripts/PasswordDetector/tmp
+cp -r /config/scripts/PasswordDetector/tmp/* /config/scripts/PasswordDetector
+rm -rf /config/scripts/PasswordDetector/tmp
+git clone https://github.com/Prinz23/nzbget-pp-reverse.git /config/scripts/ReverseName/tmp
+cp -r /config/scripts/ReverseName/tmp/* /config/scripts/ReverseName
+rm -rf /config/scripts/ReverseName/tmp
+git unstage
+apk add --no-cache py-setuptools py-pip libffi-dev musl-dev openssl-dev
+pip install --upgrade PIP
+pip install babelfish
+pip install "guessit<2"
+pip install python-dateutil
+pip install qtfaststart
+pip install requests
+pip install requests[security]
+pip install requests-cache
+pip install tmdbsimple

@@ -37,7 +37,7 @@
   # - docker-bookstack
   # - docker-delugevpn
   # - docker-goautoyt
-  # - docker-nzbget
+  - docker-nzbget
   # - docker-nzbhydra
   # - docker-lazylibrarian
   # - docker-lidarr
