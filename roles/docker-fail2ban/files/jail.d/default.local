@@ -1,0 +1,5 @@
+[DEFAULT]
+bantime = 1d
+destemail = root@localhost
+sender = root@$(hostname -f)
+action = %(action_mwl)s

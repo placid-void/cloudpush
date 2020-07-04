@@ -1,0 +1,24 @@
+[traefik-botsearch]
+enabled = true
+logpath = /var/log/traefik/access.log
+maxretry = 1
+bantime=4w
+port = http,https
+action = %(action_)s[chain="DOCKER-USER"]
+
+[traefik-badbots]
+enabled = true
+logpath = /var/log/traefik/access.log
+maxretry = 1
+bantime=4w
+port = http,https
+action = %(action_)s[chain="DOCKER-USER"]
+
+[traefik-404]
+enabled = true
+logpath = /var/log/traefik/access.log
+findtime = 120
+maxretry = 5
+bantime=3600
+port = http,https
+action = %(action_)s[chain="DOCKER-USER"]

@@ -1,0 +1,49 @@
+---
+- name: Verify required directories with correct permissions are created
+  file:
+    recurse: yes
+    path: "{{ directories.container_root }}/{{ item }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "{{ containers.fail2ban.subdomain }}"
+
+- name: Verify required files with correct permissions are created
+  copy:
+    src: "files/"
+    dest: "{{ directories.container_root }}/{{ containers.fail2ban.subdomain }}"
+    mode: 0640
+
+- name: Start Fail2ban
+  docker_container:
+    name: "{{ containers.fail2ban.subdomain }}"
+    hostname: "{{ containers.fail2ban.subdomain }}"
+    state: started
+    restart_policy: unless-stopped
+    image: crazymax/fail2ban
+    log_driver: "json-file"
+    log_options:
+      max-size: "12m"
+      max-file: "3"
+    volumes: # Mount required directories with the container
+      - "{{ directories.container_root }}/{{ containers.fail2ban.subdomain }}:/data:z"
+      - "/var/log:/var/log:ro"
+    env:
+      F2B_DB_PURGE_AGE: "7d"
+      F2B_IPTABLES_CHAIN: "INPUT"
+      F2B_LOG_LEVEL: "INFO"
+      F2B_LOG_TARGET: "STDOUT"
+      TZ: "{{ timezone }}"
+    capabilities: 
+      - NET_ADMIN
+      - NET_RAW
+    networks_cli_compatible: no
+    networks:
+      - name: "{{ containers.fail2ban.network }}"
+        aliases: "{{ containers.fail2ban.subdomain }}"
+    purge_networks: yes
+    pull: true
+    labels:
+      ## Watchtower Updates
+      com.centurylinklabs.watchtower.enable: "true"
+...

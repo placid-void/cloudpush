@@ -1,0 +1,3 @@
+# /etc/fail2ban/filter.d/traefik-botsearch.conf
+[Definition]
+failregex = ^<HOST> \- \- \[\] \"(POST|HEAD|GET) [^"]+" 404\b
