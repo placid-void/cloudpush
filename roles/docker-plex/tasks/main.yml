@@ -11,8 +11,8 @@
     value: "{{ item.value }}"
     zone: "{{ domain }}"
   loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+    - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
 
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
@@ -26,31 +26,47 @@
     value: "{{ item.value }}"
     zone: "{{ domain }}"
   loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+    - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
 
 - name: Verify required directories with correct permissions are created
   file:
     recurse: yes
-    path: "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}/"
+    path: "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}/{{ item }}"
     owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
     state: directory
     setype: container_file_t
+  loop:
+    - "cont-init.d"
+    - "scripts"
+
+- name: Verify templated required files with correct permissions are created
+  template:
+    src: "templates/{{ item }}.j2"
+    dest: "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0770
+  loop:
+    - "cont-init.d/30-config"
+    - "scripts/plex-analyze-cli.py"
+    - "scripts/plex-analyze-curl.py"
+    - "scripts/plex-analyzedeeply-cli.py"
+    - "scripts/plex-library-stats.sh"
 
 - name: Check if GPU exists on host to pass to Plex
   stat:
     path: '/dev/dri'
   register: dev_dri
 
-  # Standup the container in inventory
 - name: Start Plex
   docker_container:
     name: "{{ containers.plex.subdomain.0 }}"
     hostname: "{{ containers.plex.subdomain.0 }}"
     state: started
     restart_policy: unless-stopped
-    image: plexinc/pms-docker
+    image: linuxserver/plex
     links: # Prevent container creation and startup until linked containers are running
       - "{{ containers.rclone.subdomain }}:{{ containers.rclone.subdomain }}"
     log_driver: "json-file"
@@ -59,12 +75,15 @@
       max-file: "3"
     volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}:/config:z"
-      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:shared"
+      - "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}/cont-init.d/30-config:/etc/cont-init.d/30-config:z"
+      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:rshared"
     env:
-      PLEX_UID: "{{ users.primary.uid }}" # Pass proper UID to the container
-      PLEX_GID: "{{ users.primary.gid }}" # Pass proper GID to the container
-      UMASK: "{{ mount_options.umask }}" # File UMASK
+      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
+      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
+      PLEX_CLAIM: "{{ api_keys.plextoken }}"
       TZ: "{{ timezone }}"
+      VERSION: "docker"
+      UMASK_SET: "{{ mount_options.umask }}" # File UMASK
     devices: "{{ '/dev/dri:/dev/dri' if dev_dri.stat.exists == True | default(False) else omit }}" # Pass GPU to the container, if it exists
     etc_hosts: # Block Plex Spying
       { 'analytics.plex.tv': '127.0.0.1', 'metrics.plex.tv': '127.0.0.1' }
@@ -74,7 +93,7 @@
       - '8324:8324/tcp'
     networks_cli_compatible: no
     networks:
-      - name: "{{ networks.docker.primary.name }}"
+      - name: "{{ containers.plex.network }}"
         aliases: "{{ containers.plex.subdomain.0 }}"
     purge_networks: yes
     pull: true

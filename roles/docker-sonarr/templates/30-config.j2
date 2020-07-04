@@ -1,0 +1,12 @@
+#!/usr/bin/with-contenv bash
+
+# Install python3, pip3 and sqlite3
+apt-get update
+apt-get install -y python3 python3-pip sqlite3
+pip3 install --upgrade pip
+pip3 install requests
+pip3 install requests-cache
+
+# symlink mnt and data dirs until queue is empty
+  rm -r /mnt
+  ln -s {{ directories.data_dir }} /mnt
