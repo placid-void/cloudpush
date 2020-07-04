@@ -1,51 +1,48 @@
 ---
-# - name: Create DNS Reconds on Cloudflare for this container
-#   cloudflare_dns:
-#     account_api_token: "{{ cloudflare.api }}"
-#     account_email: "{{ cloudflare.email }}"
-#     proxied: "yes"
-#     record: "{{ containers.rclone.subdomain }}"
-#     solo: "true"
-#     state: "present"
-#     type: "{{ item.type }}"
-#     value: "{{ item.value }}"
-#     zone: "{{ domain }}"
-#   loop:
-#     - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
-#     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
+- name: Create DNS Reconds on Cloudflare for this container
+  cloudflare_dns:
+    account_api_token: "{{ cloudflare.api }}"
+    account_email: "{{ cloudflare.email }}"
+    proxied: "yes"
+    record: "{{ containers.rclone.subdomain }}"
+    solo: "true"
+    state: "present"
+    type: "CNAME"
+    value: "{{ containers.traefik.subdomain }}.{{ domain }}"
+    zone: "{{ domain }}"
 
-# - name: Verify required directories with correct permissions are created
-#   file:
-#     recurse: yes
-#     path: "{{ item }}"
-#     owner: "{{ users.primary.user }}"
-#     group: "{{ users.primary.group }}"
-#     state: directory
-#     setype: container_file_t
-#   loop:
-#     - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}"
-#     - "/opt{{ directories.download_dir }}"
-#     - "/opt{{ directories.incomplete_dir }}"
-#     - "{{ directories.host_data_dir }}/{{ directories.cache_dir }}"
+- name: Verify required directories with correct permissions are created
+  file:
+    recurse: yes
+    path: "{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    state: directory
+    setype: container_file_t
+  loop:
+    - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}"
+    - "/opt{{ directories.download_dir }}"
+    - "/opt{{ directories.incomplete_dir }}"
+    - "{{ directories.host_data_dir }}/{{ directories.cache_dir }}"
 
-# - name: Verify templated required files with correct permissions are created
-#   template:
-#     src: "templates/{{ item }}.j2"
-#     dest: "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/{{ item }}"
-#     owner: "{{ users.primary.user }}"
-#     group: "{{ users.primary.group }}"
-#     mode: 0770
-#   loop:
-#     - "fuse.conf"
-#     - "rclone.conf"
-#     - "scripts/rclone-checker.sh"
-#     - "scripts/rclone-mount-check.sh"
-#     - "scripts/rcquota.sh"
-#     - "scripts/rcuploadcheck.sh"
+- name: Verify templated required files with correct permissions are created
+  template:
+    src: "templates/{{ item }}.j2"
+    dest: "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0770
+  loop:
+    - "fuse.conf"
+    - "rclone.conf"
+    - "scripts/rclone-checker.sh"
+    - "scripts/rclone-mount-check.sh"
+    - "scripts/rcquota.sh"
+    - "scripts/rcuploadcheck.sh"
 
-# - name: Verify mount point bind is not currently mounted
-#   command:
-#     cmd: "fusermount -uz {{ directories.host_drive_root }}"
+- name: Verify mount point bind is not currently mounted
+  command:
+    cmd: "fusermount -uz {{ directories.host_drive_root }}"
 
 - name: Start RClone
   docker_container:

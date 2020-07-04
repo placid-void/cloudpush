@@ -4,45 +4,16 @@
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
-    record: "@"
+    record: "{{ item }}"
     solo: "true"
     state: "present"
-    type: "{{ item.type }}"
-    value: "{{ item.value }}"
+    type: "CNAME"
+    value: "{{ containers.traefik.subdomain }}.{{ domain }}"
     zone: "{{ domain }}"
   loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
-
-- name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns:
-    account_api_token: "{{ cloudflare.api }}"
-    account_email: "{{ cloudflare.email }}"
-    proxied: "yes"
-    record: "{{ containers.organizr.subdomain.0 }}"
-    solo: "true"
-    state: "present"
-    type: "{{ item.type }}"
-    value: "{{ item.value }}"
-    zone: "{{ domain }}"
-  loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
-
-- name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns:
-    account_api_token: "{{ cloudflare.api }}"
-    account_email: "{{ cloudflare.email }}"
-    proxied: "yes"
-    record: "{{ containers.organizr.subdomain.1 }}"
-    solo: "true"
-    state: "present"
-    type: "{{ item.type }}"
-    value: "{{ item.value }}"
-    zone: "{{ domain }}"
-  loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
+    - "@"
+    - "{{ containers.ombi.subdomain.0 }}"
+    - "{{ containers.ombi.subdomain.1 }}"
 
 - name: Verify required directories with correct permissions are created
   file:

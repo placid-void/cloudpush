@@ -4,30 +4,15 @@
     account_api_token: "{{ cloudflare.api }}"
     account_email: "{{ cloudflare.email }}"
     proxied: "yes"
-    record: "{{ containers.plex.subdomain.0 }}" # Plex Server Subdomain
+    record: "{{ item }}"
     solo: "true"
     state: "present"
-    type: "{{ item.type }}"
-    value: "{{ item.value }}"
+    type: "CNAME"
+    value: "{{ containers.traefik.subdomain }}.{{ domain }}"
     zone: "{{ domain }}"
   loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
-
-- name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns:
-    account_api_token: "{{ cloudflare.api }}"
-    account_email: "{{ cloudflare.email }}"
-    proxied: "yes"
-    record: "{{ containers.plex.subdomain.1 }}" # Plex WebTools Subdomain
-    solo: "true"
-    state: "present"
-    type: "{{ item.type }}"
-    value: "{{ item.value }}"
-    zone: "{{ domain }}"
-  loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
+    - "{{ containers.plex.subdomain.0 }}"
+    - "{{ containers.plex.subdomain.1 }}"
 
 - name: Verify required directories with correct permissions are created
   file:

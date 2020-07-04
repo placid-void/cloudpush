@@ -7,12 +7,9 @@
     record: "{{ containers.alltube.subdomain }}"
     solo: "true"
     state: "present"
-    type: "{{ item.type }}"
-    value: "{{ item.value }}"
+    type: "CNAME"
+    value: "{{ containers.traefik.subdomain }}.{{ domain }}"
     zone: "{{ domain }}"
-  loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
 
 - name: Verify required directories with correct permissions are created
   file:
