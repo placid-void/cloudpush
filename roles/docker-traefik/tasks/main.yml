@@ -11,8 +11,8 @@
     value: "{{ item.value }}"
     zone: "{{ domain }}"
   loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+    - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
 
 - name: Verify required directories with correct permissions are created
   file:
@@ -59,14 +59,18 @@
       max-file: "3"
     volumes: # Mount required directories with the container
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "/var/log/traefik:/var/log:z"
       - "{{ directories.container_root }}/{{ containers.traefik.subdomain }}:/config:z"
     env:
       CF_API_EMAIL: "{{ cloudflare.email }}"
       CF_API_KEY: "{{ cloudflare.api }}"
       TRAEFIK_ACCESSLOG: "true"
       TRAEFIK_ACCESSLOG_BUFFERINGSIZE: "100"
-      TRAEFIK_ACCESSLOG_FILEPATH: "/config/accesslog.log"
+      TRAEFIK_ACCESSLOG_FILEPATH: "/var/log/access.log"
       TRAEFIK_ACCESSLOG_FILTERS_STATUSCODES: "400-499"
+      TRAEFIK_ACCESSLOG_FIELDS_DEFAULTMODE: "keep"
+      TRAEFIK_ACCESSLOG_FIELDS_HEADERS_DEFAULTMODE: "keep"
+      TRAEFIK_ACCESSLOG_FIELDS_NAMES_SMARTUTC: "drop"
       TRAEFIK_API: "true"
       # TRAEFIK_API_INSECURE: "true"
       TRAEFIK_CERTIFICATESRESOLVERS_CLOUDFLARE_ACME_CASERVER: "https://acme-v02.api.letsencrypt.org/directory" # LetsEncrypt Staging Server - uncomment when testing
@@ -86,14 +90,14 @@
       TRAEFIK_PROVIDERS_DOCKER: "true"
       TRAEFIK_PROVIDERS_DOCKER_ENDPOINT: "unix:///var/run/docker.sock"
       TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT: "false"
-      TRAEFIK_PROVIDERS_DOCKER_NETWORK: "{{ networks.docker.primary.name }}"
+      TRAEFIK_PROVIDERS_DOCKER_NETWORK: "{{ containers.traefik.network }}"
       TRAEFIK_PROVIDERS_FILE_DIRECTORY: "/config/rules" # Load dynamic configuration from one or more .toml or .yml files in a directory.
       TRAEFIK_PROVIDERS_FILE_WATCH: "true" # Only works on top level files in the rules folder
       TRAEFIK_SERVERSTRANSPORT_INSECURESKIPVERIFY: "true"
       TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
-      - name: "{{ networks.docker.primary.name }}"
+      - name: "{{ containers.traefik.network }}"
         aliases: "{{ containers.traefik.subdomain }}"
     ports: # Pass required Traefik ports to the host interface
       - "80:80/tcp"
@@ -133,12 +137,9 @@
     record: "{{ containers.oauth.subdomain }}"
     solo: "true"
     state: "present"
-    type: "{{ item.type }}"
-    value: "{{ item.value }}"
+    type: "CNAME"
+    value: "{{ containers.traefik.subdomain }}.{{ containers.traefik.tld }}"
     zone: "{{ domain }}"
-  loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
 
 - name: Start Traefik OAuth
   docker_container:
@@ -154,21 +155,22 @@
       max-size: "12m"
       max-file: "3"
     env:
+      AUTH_HOST: "{{ containers.oauth.subdomain }}.{{ containers.oauth.tld }}"
       CLIENT_ID: "{{ oauth.tld.id }}"
       CLIENT_SECRET: "{{ oauth.tld.secret }}"
-      SECRET: "{{ oauth.tld.oauth_secret }}"
       COOKIE_DOMAIN: "{{ containers.oauth.tld }}"
-      INSECURE_COOKIE: "false"
-      AUTH_HOST: "{{ containers.oauth.subdomain }}.{{ containers.oauth.tld }}"
-      URL_PATH: "/_oauth"
-      WHITELIST: "{{ oauth.tld.email_1 }}, {{ oauth.tld.email_2 }}"
-      LOG_LEVEL: "info"
-      LOG_FORMAT: "text"
       LIFETIME: "2592000" # 30 days
+      LOG_FORMAT: "text" # Log format (default: text) [text|json|pretty]  
+      LOG_LEVEL: "info" # Log level (default: warn) [trace|debug|info|warn|error|fatal|panic]
+      RULE_1_ACTION: "allow" # Setup rule to bypass oauth for API access
+      RULE_1_RULE: "PathPrefix(`/api/public`) && Headers(`Content-Type`, `application/json`)"
+      SECRET: "{{ oauth.tld.oauth_secret }}"
       TZ: "{{ timezone }}"
+      URL_PATH: "/_oauth"
+      WHITELIST: "{{ oauth.tld.email_1 }}, {{ oauth.tld.email_2 }}, {{ oauth.tld.email_3 }}"
     networks_cli_compatible: no
     networks:
-      - name: "{{ networks.docker.primary.name }}"
+      - name: "{{ containers.oauth.network }}"
         aliases: "{{ containers.oauth.subdomain }}"
     purge_networks: yes
     pull: true

@@ -503,11 +503,11 @@ duplicacy:
   id: "gd_" # Duplicacy backups ID
   name: "G_Drive" # Remote storage name
   options: "-stats -threads 5" # Options to be applied to all configured backup and check tasks
-  prune_options: "-a -exclusive -stats -threads 5" # Options to be applied to all configured prune tasks
-  keep_options: "-keep 0:365 -keep 30:180 -keep 1:7" # Keep options for backups
+  prune_options: "-a -exclusive -threads 5" # Options to be applied to all configured prune tasks
+  keep_options: "-keep 0:365 -keep 30:90 -keep 7:30 -keep 1:7" # Keep options for backups
   global_options: "-v" # Global options
   backup_name: "Appdata Backup" # Name of the backup task
-  start_time: "2:00PM" # Start time of backup task
+  start_time: "02:00PM" # Start time of backup task
   max_run_time: "06:00" # Max length of backup task
   frequency: "86400" # Frequency of backup task
   days: "1000000" # How long should the task be scheduled for

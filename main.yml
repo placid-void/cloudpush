@@ -9,8 +9,9 @@
 # Starting core services
   # - docker-duplicacy
   # - docker-gc
-  # - docker-rclone
   # - docker-watchtower
+  - docker-rclone
+  # - docker-fail2ban
 # You now need to restore from the latest Duplicacy backup on the configured remote storage
 
 # Required Roles for other containers
@@ -37,7 +38,7 @@
   # - docker-bookstack
   # - docker-delugevpn
   # - docker-goautoyt
-  - docker-nzbget
+  # - docker-nzbget
   # - docker-nzbhydra
   # - docker-lazylibrarian
   # - docker-lidarr
