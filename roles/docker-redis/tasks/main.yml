@@ -2,13 +2,11 @@
 - name: Verify required directories with correct permissions are created
   file:
     recurse: yes
-    path: "{{ directories.container_root }}/{{ item }}"
+    path: "{{ directories.container_root }}/data"
     owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
     state: directory
     setype: container_file_t
-  loop:
-    - "{{ containers.redis.subdomain }}/data"
 
 - name: Verify templated required files with correct permissions are created
   template:
@@ -38,7 +36,7 @@
       TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
-      - name: "{{ networks.docker.primary.name }}"
+      - name: "{{ containers.redis.network }}"
         aliases: "{{ containers.redis.subdomain }}"
     purge_networks: yes
     pull: true

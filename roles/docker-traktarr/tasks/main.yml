@@ -45,7 +45,7 @@
         TZ: "{{ timezone }}"
       networks_cli_compatible: no
       networks:
-        - name: "{{ networks.docker.primary.name }}"
+        - name: "{{ containers.traktarr.network }}"
           aliases: "{{ containers.traktarr.subdomain }}"
       purge_networks: yes
       pull: true

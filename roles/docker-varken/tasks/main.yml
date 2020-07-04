@@ -126,7 +126,7 @@
       VRKN_TAUTULLI_1_VERIFY_SSL: "false"
     networks_cli_compatible: no
     networks:
-      - name: "{{ networks.docker.primary.name }}"
+      - name: "{{ containers.varken.network }}"
         aliases: "{{ containers.varken.subdomain }}"
     purge_networks: yes
     pull: true

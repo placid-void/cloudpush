@@ -11,8 +11,8 @@
     value: "{{ item.value }}"
     zone: "{{ domain }}"
   loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+    - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
 
 - name: Create DNS Reconds on Cloudflare for this container
   cloudflare_dns:
@@ -26,8 +26,8 @@
     value: "{{ item.value }}"
     zone: "{{ domain }}"
   loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+    - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
 
 - name: Verify required directories with correct permissions are created
   file:
@@ -63,7 +63,7 @@
       TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
-      - name: "{{ networks.docker.primary.name }}"
+      - name: "{{ containers.statping.network }}"
         aliases: "{{ containers.statping.subdomain.0 }}"
     # Statping user details
     user: "{{ users.primary.uid }}:{{ users.primary.gid }}"

@@ -14,7 +14,7 @@
       TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
-      - name: "{{ networks.docker.primary.name }}"
+      - name: "{{ containers.node_exporter.network }}"
         aliases: "{{ containers.node_exporter.subdomain }}"
     purge_networks: yes
     pull: true 

@@ -11,8 +11,8 @@
     value: "{{ item.value }}"
     zone: "{{ domain }}"
   loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+    - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
 
 - name: Verify required directories with correct permissions are created
   file:
@@ -47,7 +47,7 @@
       max-file: "3"
     volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.bazarr.subdomain }}:/config:z"
-      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:shared"
+      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:rshared"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
@@ -55,7 +55,7 @@
       TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
-      - name: "{{ networks.docker.primary.name }}"
+      - name: "{{ containers.bazarr.network }}"
         aliases: "{{ containers.bazarr.subdomain }}"
     purge_networks: yes
     pull: true
