@@ -8,12 +8,9 @@
     record: "{{ containers.temp.subdomain }}"
     solo: "true"
     state: "present"
-    type: "{{ item.type }}"
+    type: "CNAME"
     value: "{{ item.value }}"
-    zone: "{{ domain }}"
-  loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+    zone: "{{ containers.traefik.subdomain }}.{{ domain }}"
 
 - name: Verify required directories with correct permissions are created
   file:
@@ -65,7 +62,7 @@
       TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
-      - name: "{{ networks.docker.primary.name }}"
+      - name: "{{ containers.temp.network }}"
         aliases: "{{ containers.temp.subdomain }}"
     purge_networks: yes
     pull: true
