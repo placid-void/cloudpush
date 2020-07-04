@@ -13,13 +13,13 @@
       max-file: "3"
     volumes: # Mount required directories with the container
       - "/var/run/docker.sock:/var/run/docker.sock:z"
-      - "/etc:/etc:z"
+      - "/etc:/etc:ro"
     env:
       REMOVE_VOLUMES: "1" # Should GC Remove abandoned volumes?
       TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
-      - name: "{{ networks.docker.primary.name }}"
+      - name: "{{ containers.gc.network }}"
         aliases: "{{ containers.gc.subdomain }}"
     purge_networks: yes
     pull: true
