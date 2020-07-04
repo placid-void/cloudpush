@@ -15,8 +15,8 @@
     value: "{{ item.value }}"
     zone: "{{ domain }}"
   loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+    - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
 
 - name: Create Required Directories
   file:
@@ -29,14 +29,6 @@
   loop:
     - "{{ directories.container_root }}"
     - "{{ directories.host_data_dir}}"
-
-- name: Create all system groups
-  group:
-    name: "{{ item.group }}"
-    gid: "{{ item.gid }}"
-    system: yes
-    state: present
-  loop: "{{ system_groups }}"
 
 - name: Create primary user
   user:
@@ -59,6 +51,14 @@
     system: yes
     state: present
 
+- name: Create all system groups
+  group:
+    name: "{{ item.group }}"
+    gid: "{{ item.gid }}"
+    system: yes
+    state: present
+  loop: "{{ system_groups }}"
+
 - name: Add users to the new groups
   user:
     name: "{{ item }}"
@@ -68,7 +68,6 @@
   loop:
     - "{{ users.primary.user }}"
     - "{{ users.secondary.user }}"
-    - root
 
 - name: Add sudoers to system
   template: 
@@ -103,11 +102,14 @@
 - name: Verify required directories with correct permissions are created
   file:
     recurse: yes
-    path: "/home/{{ users.primary.user }}/.ssh"
+    path: "/home/{{ users.primary.user }}/{{ item }}"
     owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
     mode: 0700
     state: directory
+  loop:
+    - ".bin"
+    - ".ssh"
 
 - name: Creating authorized_keys File
   file:
@@ -169,16 +171,6 @@
     - gnupg-agent
     - software-properties-common
 
-- name: Add Docker Community Edition GPG Key to host
-  apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
-
-- name: Add Docker Community Edition repo
-  apt_repository:
-    repo: "deb https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-    state: present
-
 - name: Install required apt packages
   apt:
     name: "{{ item }}"
@@ -189,16 +181,13 @@
     - bc
     - cockpit
     - cockpit-doc
-    - cockpit-docker
     - cockpit-machines
     - cockpit-packagekit
     - cockpit-pcp
-    - containerd.io
     - ctop
     - dialog
     - dirmngr
-    - docker-ce
-    - docker-ce-cli
+    - docker.io
     - elinks
     - ethtool
     - fail2ban
@@ -269,24 +258,12 @@
 - name: Template docker daemon to etc
   template:
     src: "templates/docker/daemon.json.j2"
-    dest: "/etc/docker/"
+    dest: "/etc/docker/daemon.json"
 
 - name: Copy motd to motd folder
   copy:
     src: "templates/update-motd.d"
     dest: "/etc/"
-
-- name: Template fail2ban conf to host
-  template:
-    src: "templates/fail2ban.conf.j2"
-    dest: "/etc/fail2ban/fail2ban.local"
-  loop:
-    - "fail2ban.conf"
-
-- name: Template fail2ban jail conf to host
-  template:
-    src: "templates/jail.conf.j2"
-    dest: "/etc/fail2ban/jail.local"
 
 - name: Allow_other in fuse.conf
   lineinfile: 
@@ -370,7 +347,7 @@
   lineinfile:
     path: /etc/sysfs.conf
     regexp: '^#kernel.domainname = example.com'
-    line: "kernel.domainname = {{ domain i}"
+    line: "kernel.domainname = {{ domain }}"
 
 - name: Modify overcommit_memory settings
   lineinfile:
@@ -385,4 +362,15 @@
 
 - name: Disable transparent huge pages for redis performance - live change
   shell: echo never {{ ">" }} /sys/kernel/mm/transparent_hugepage/enabled
+
+- name: Verify templated required files with correct permissions are created
+  template:
+    src: "templates/scripts/{{ item }}.j2"
+    dest: "/home/{{ users.primary.user }}/.bin/{{ item }}"
+    owner: "{{ users.primary.user }}"
+    group: "{{ users.primary.group }}"
+    mode: 0770
+  loop:
+    - "radarr4kstats.sh"
+    - "radarrstats.sh"
 ...
