@@ -42,20 +42,6 @@
             "days": "{{ duplicacy.days }}",
             "jobs": [
                 {
-                    "type": "backup",
-                    "computer": "{{ containers.duplicacy.subdomain }}",
-                    "repository": 0,
-                    "source": "{{ directories.container_root }}",
-                    "storage": "{{ duplicacy.name }}",
-                    "options": "{{ duplicacy.options }}",
-                    "parallel": false,
-                    "global_options": "{{ duplicacy.global_options }}",
-                    "status_code": "",
-                    "status_note": "",
-                    "status_log": "",
-                    "status_time": "0001-01-01T00:00:00Z"
-                },
-                {
                     "type": "check",
                     "computer": "{{ containers.duplicacy.subdomain }}",
                     "repository": 0,
@@ -75,7 +61,21 @@
                     "repository": 0,
                     "source": "",
                     "storage": "{{ duplicacy.name }}",
-                    "options": "{{ duplicacy.keep_options }} -id {{ duplicacy.id }} {{ duplicacy.prune_options }}",
+                    "options": "{{ duplicacy.keep_options }} {{ duplicacy.prune_options }}",
+                    "parallel": false,
+                    "global_options": "{{ duplicacy.global_options }}",
+                    "status_code": "",
+                    "status_note": "",
+                    "status_log": "",
+                    "status_time": "0001-01-01T00:00:00Z"
+                },
+                {
+                    "type": "backup",
+                    "computer": "{{ containers.duplicacy.subdomain }}",
+                    "repository": 0,
+                    "source": "{{ directories.container_root }}",
+                    "storage": "{{ duplicacy.name }}",
+                    "options": "{{ duplicacy.options }}",
                     "parallel": false,
                     "global_options": "{{ duplicacy.global_options }}",
                     "status_code": "",

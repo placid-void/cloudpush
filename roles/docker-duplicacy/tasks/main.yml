@@ -11,8 +11,8 @@
     value: "{{ item.value }}"
     zone: "{{ domain }}"
   loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+    - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
+    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
 
 - name: Verify required directories with correct permissions are created
   file:
@@ -23,9 +23,7 @@
     state: directory
     setype: container_file_t
   loop:
-    - "{{ containers.duplicacy.subdomain }}"
     - "{{ containers.duplicacy.subdomain }}/cache"
-    - "{{ containers.duplicacy.subdomain }}/filters"
     - "{{ containers.duplicacy.subdomain }}/filters/{{ containers.duplicacy.subdomain }}"
 
 - name: Verify templated required files with correct permissions are created
@@ -36,7 +34,6 @@
     group: "{{ users.primary.group }}"
     mode: 0660
   loop:
-    - "backup-sources.txt"
     - "gcd-token.json"
     - "duplicacy.json"
     - "licenses.json"
@@ -46,8 +43,6 @@
   template:
     src: "templates/backup-sources.txt.j2"
     dest: "{{ directories.container_root }}/{{ containers.duplicacy.subdomain }}/filters/{{ containers.duplicacy.subdomain }}/0"
-    owner: "{{ users.primary.user }}"
-    group: "{{ users.primary.group }}"
     mode: 0660
 
 - name: Start Duplicacy
@@ -66,13 +61,12 @@
       - "{{ directories.container_root }}/{{ containers.duplicacy.subdomain }}/cache:/var/cache/duplicacy:z"
       - "{{ directories.container_root }}:{{ directories.container_root }}:ro"
     env:
-      PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
-      PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
       MACHINE_ID: "{{ duplicacy.machine_id }}" # Duplicacy Machine  ID
       TZ: "{{ timezone }}"
+    cap_drop: "ALL"
     networks_cli_compatible: no
     networks:
-      - name: "{{ networks.docker.primary.name }}"
+      - name: "{{ containers.duplicacy.network }}"
         aliases: "{{ containers.duplicacy.subdomain }}"
     purge_networks: yes
     pull: true
