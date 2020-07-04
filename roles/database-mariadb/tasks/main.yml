@@ -18,7 +18,7 @@
 
 - name: Add Bookstack user
   mysql_user:
-    host: "{{ containers.bookstack.subdomain }}.{{ networks.docker.primary.name }}"
+    host: "{{ containers.bookstack.subdomain }}.{{ containers.bookstack.network }}"
     login_host: "{{ containers.mariadb.subdomain }}"
     login_password: "{{ mariadb.mariadb_passwd }}"
     login_port: "{{ mariadb.login_port }}"
@@ -31,7 +31,7 @@
 
 - name: Add Grafana user
   mysql_user:
-    host: "{{ containers.grafana.subdomain }}.{{ networks.docker.primary.name }}"
+    host: "{{ containers.grafana.subdomain }}.{{ containers.grafana.network }}"
     login_host: "{{ containers.mariadb.subdomain }}"
     login_password: "{{ mariadb.mariadb_passwd }}"
     login_port: "{{ mariadb.login_port }}"
@@ -44,7 +44,7 @@
 
 - name: Add Nextcloud user
   mysql_user:
-    host: "{{ containers.nextcloud.subdomain }}.{{ networks.docker.primary.name }}"
+    host: "{{ containers.nextcloud.subdomain }}.{{ containers.nextcloud.network }}"
     login_host: "{{ containers.mariadb.subdomain }}"
     login_password: "{{ mariadb.mariadb_passwd }}"
     login_port: "{{ mariadb.login_port }}"
@@ -57,7 +57,7 @@
 
 - name: Add Promgen user
   mysql_user:
-    host: "{{ containers.promgen.subdomain }}.{{ networks.docker.primary.name }}"
+    host: "{{ containers.promgen.subdomain }}.{{ containers.promgen.network }}"
     login_host: "{{ containers.mariadb.subdomain }}"
     login_password: "{{ mariadb.mariadb_passwd }}"
     login_port: "{{ mariadb.login_port }}"
@@ -70,7 +70,7 @@
 
 - name: Add Statping user
   mysql_user:
-    host: "{{ containers.statping.subdomain.0 }}.{{ networks.docker.primary.name }}"
+    host: "{{ containers.statping.subdomain.0 }}.{{ containers.statping.network }}"
     login_host: "{{ containers.mariadb.subdomain }}"
     login_password: "{{ mariadb.mariadb_passwd }}"
     login_port: "{{ mariadb.login_port }}"
