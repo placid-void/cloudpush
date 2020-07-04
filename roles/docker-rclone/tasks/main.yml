@@ -1,48 +1,51 @@
 ---
-- name: Create DNS Reconds on Cloudflare for this container
-  cloudflare_dns:
-    account_api_token: "{{ cloudflare.api }}"
-    account_email: "{{ cloudflare.email }}"
-    proxied: "yes"
-    record: "{{ containers.rclone.subdomain }}"
-    solo: "true"
-    state: "present"
-    type: "{{ item.type }}"
-    value: "{{ item.value }}"
-    zone: "{{ domain }}"
-  loop:
-    - { type: 'A', value: '{{ ansible_default_ipv4.address }}' }
-    - { type: 'AAAA', value: '{{ ansible_default_ipv6.address }}' }
+# - name: Create DNS Reconds on Cloudflare for this container
+#   cloudflare_dns:
+#     account_api_token: "{{ cloudflare.api }}"
+#     account_email: "{{ cloudflare.email }}"
+#     proxied: "yes"
+#     record: "{{ containers.rclone.subdomain }}"
+#     solo: "true"
+#     state: "present"
+#     type: "{{ item.type }}"
+#     value: "{{ item.value }}"
+#     zone: "{{ domain }}"
+#   loop:
+#     - { type: 'A', value: '{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}' }
+#     - { type: 'AAAA', value: '{{ ansible_default_ipv6.address|default(ansible_all_ipv6_addresses[0]) }}' }
 
-- name: Verify required directories with correct permissions are created
-  file:
-    recurse: yes
-    path: "{{ item }}"
-    owner: "{{ users.primary.user }}"
-    group: "{{ users.primary.group }}"
-    state: directory
-    setype: container_file_t
-  loop:
-    - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}"
-    - "/opt{{ directories.download_dir }}"
-    - "/opt{{ directories.incomplete_dir }}"
-    - "{{ directories.host_data_dir }}/{{ directories.cache_dir }}"
+# - name: Verify required directories with correct permissions are created
+#   file:
+#     recurse: yes
+#     path: "{{ item }}"
+#     owner: "{{ users.primary.user }}"
+#     group: "{{ users.primary.group }}"
+#     state: directory
+#     setype: container_file_t
+#   loop:
+#     - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}"
+#     - "/opt{{ directories.download_dir }}"
+#     - "/opt{{ directories.incomplete_dir }}"
+#     - "{{ directories.host_data_dir }}/{{ directories.cache_dir }}"
 
-- name: Verify templated required files with correct permissions are created
-  template:
-    src: "templates/{{ item }}.j2"
-    dest: "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/{{ item }}"
-    owner: "{{ users.primary.user }}"
-    group: "{{ users.primary.group }}"
-    mode: 0770
-  loop:
-    - "fuse.conf"
-    - "rclone.conf"
-    - "rclone-checker.sh"
+# - name: Verify templated required files with correct permissions are created
+#   template:
+#     src: "templates/{{ item }}.j2"
+#     dest: "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/{{ item }}"
+#     owner: "{{ users.primary.user }}"
+#     group: "{{ users.primary.group }}"
+#     mode: 0770
+#   loop:
+#     - "fuse.conf"
+#     - "rclone.conf"
+#     - "scripts/rclone-checker.sh"
+#     - "scripts/rclone-mount-check.sh"
+#     - "scripts/rcquota.sh"
+#     - "scripts/rcuploadcheck.sh"
 
-- name: Verify mount point bind is not currently mounted
-  command:
-    cmd: "fuzermount -uz {{ directories.host_drive_root }}"
+# - name: Verify mount point bind is not currently mounted
+#   command:
+#     cmd: "fusermount -uz {{ directories.host_drive_root }}"
 
 - name: Start RClone
   docker_container:
@@ -54,7 +57,7 @@
     volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}:/config/rclone:z"
       - "{{ directories.host_data_dir }}:{{ directories.data_dir }}:slave" # Mount data directory as slave
-      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:shared" # Mount drive root directory as shared
+      - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:rshared" # Mount drive root directory as rshared
       - "{{ directories.container_root }}/{{ containers.rclone.subdomain }}/fuse.conf:/etc/fuse.conf:z" # Force "allow_other" option for FUSE
       - "/etc/passwd:/etc/passwd:ro" # Required for FUSE to work correctly
       - "/etc/group:/etc/group:ro" # Required for FUSE to work correctly
@@ -62,7 +65,7 @@
       - "MKNOD"
       - "SYS_ADMIN"
     # Startup command with options to mount Rclone # Added auto_unmount option to mount command, not tested
-    command: "mount {{ mount_options.drive }}:/Media {{ directories.drive_root }} --allow-non-empty --allow-other --fast-list --dir-cache-time={{ mount_options.dir_cache_time }} --drive-chunk-size={{ mount_options.drive_chunk_size }} --stats={{ mount_options.stats }} --stats-log-level={{ mount_options.stats_log_level }} --umask {{ mount_options.umask }} --log-level={{ mount_options.log_level }} --vfs-read-chunk-size-limit={{ mount_options.vfs_read_chunk_size_limit }} --vfs-cache-mode={{ mount_options.vfs_cache_mode }} --vfs-cache-max-age={{ mount_options.vfs_cache_max_age }} --vfs-cache-max-size {{ mount_options.max_size }} --user-agent={{ mount_options.user_agent }} --cache-dir={{ directories.data_dir }}/{{ directories.cache_dir }} --cache-writes --rc-web-gui --rc-web-fetch-url=https://api.github.com/repos/rclone/rclone-webui-react/releases/tags/v2.0.2 --rc-web-gui-update --rc-web-gui-no-open-browser"
+    command: "mount {{ mount_options.drive }}:/Media {{ directories.drive_root }} --allow-non-empty --allow-other --fast-list --dir-cache-time={{ mount_options.dir_cache_time }} --drive-stop-on-upload-limit --drive-chunk-size={{ mount_options.drive_chunk_size }} --stats={{ mount_options.stats }} --stats-log-level={{ mount_options.stats_log_level }} --umask {{ mount_options.umask }} --log-level={{ mount_options.log_level }} --vfs-read-chunk-size-limit={{ mount_options.vfs_read_chunk_size_limit }} --vfs-cache-mode={{ mount_options.vfs_cache_mode }} --vfs-cache-max-age={{ mount_options.vfs_cache_max_age }} --vfs-cache-max-size {{ mount_options.max_size }} --user-agent={{ mount_options.user_agent }} --cache-writes --cache-dir={{ directories.data_dir }}/{{ directories.cache_dir }} --rc --rc-enable-metrics --rc-allow-origin=`https://{{ containers.rclone.subdomain }}.{{ domain }}` --rc-serve --rc-user={{ mount_options.rc_user }} --rc-pass={{ mount_options.rc_pass }} --rc-addr= --rc-web-gui --rc-web-gui-update --rc-web-gui-no-open-browser "
     # Pass FUSE to the container
     devices: "/dev/fuse"
     env:
@@ -80,6 +83,7 @@
       # RCLONE_CONFIG_DRIVE_TYPE: "drive"
       # RCLONE_DIR_CACHE_TIME: "{{ mount_options.dir_cache_time }}"
       # RCLONE_DRIVE_CHUNK_SIZE: "{{ mount_options.drive_chunk_size }}"
+      # RCLONE_DRIVE_STOP_ON_UPLOAD_LIMIT: "{{ mount_options.upload_limit }}"
       # RCLONE_FAST_LIST: "{{ mount_options.fast_list }}"
       # RCLONE_LOG_LEVEL: "{{ mount_options.log_level }}"
       # RCLONE_RC: "{{ mount_options.rc }}"
@@ -103,7 +107,7 @@
     user: "{{ users.primary.uid }}:{{ users.primary.gid }}"
     networks_cli_compatible: no
     networks:
-      - name: "{{ networks.docker.primary.name }}"
+      - name: "{{ containers.rclone.network }}"
         aliases: "{{ containers.rclone.subdomain }}"
     purge_networks: yes
     pull: true
@@ -122,11 +126,11 @@
       ## Middlewares
       traefik.http.routers.rclone-rtr.middlewares: "chain-oauth@file"
 
-- name: Creating required files with correct permissions are created
-  file:
-    path: "{{ directories.host_drive_root }}/.mountcheck"
-    state: touch
-    owner: "{{ users.primary.user }}"
-    group: "{{ users.primary.group }}"
-    mode: 0600
+# - name: Creating required files with correct permissions are created
+#   file:
+#     path: "{{ directories.host_drive_root }}/.mountcheck"
+#     state: touch
+#     owner: "{{ users.primary.user }}"
+#     group: "{{ users.primary.group }}"
+#     mode: 0600
 ...
