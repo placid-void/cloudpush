@@ -8,28 +8,31 @@
   # - host-setup
 
 # Core Services
+  # - docker-duplicacy
   # - docker-fail2ban
   # - docker-gc
-  # - docker-influxdb
-  # - docker-mariadb
-  # - docker-postgresql
   # - docker-rclone
-  # - docker-redis
   # - docker-traefik
   # - docker-watchtower
 
 # Administration
+  # - docker-adminer
   # - docker-cadvisor
   # - docker-cloudbeaver
   # - docker-portainer
   # - docker-promgen
-  # - docker-duplicacy
 
 # Alerts and Metrics
   # - docker-asf
   # - docker-node-exporter
   # - docker-prometheus
   # - docker-statping
+
+# Database Services
+  # - docker-influxdb
+  # - docker-mariadb
+  # - docker-postgresql
+  # - docker-redis
 
 # Database specific roles
   # - database-mariadb
