@@ -6,65 +6,75 @@
   roles:
 # Bootstrap host
   # - host-setup
-# Starting core services
-  # - docker-duplicacy
-  # - docker-gc
-  # - docker-watchtower
-  - docker-rclone
+
+# Core Services
   # - docker-fail2ban
-# You now need to restore from the latest Duplicacy backup on the configured remote storage
-
-# Required Roles for other containers
-  # - docker-mariadb
-  # - database-mariadb
-  # - docker-postgresql
-  # - database-postgresql
-  # - docker-redis
-  # - docker-portainer
+  # - docker-gc
   # - docker-influxdb
+  # - docker-mariadb
+  # - docker-postgresql
+  # - docker-rclone
+  # - docker-redis
   # - docker-traefik
-  # - docker-cadvisor
-  # - docker-node-exporter
-  # - docker-statping
-  # - docker-prometheus
-  # - docker-promgen
-  # - docker-asf
-  # - docker-cloudbeaver
-  # - docker-grafana
-  # - docker-varken
+  # - docker-watchtower
 
-# Starting Backend Services
+# Administration
+  # - docker-cadvisor
+  # - docker-cloudbeaver
+  # - docker-portainer
+  # - docker-promgen
+  # - docker-duplicacy
+
+# Alerts and Metrics
+  # - docker-asf
+  # - docker-node-exporter
+  # - docker-prometheus
+  # - docker-statping
+
+# Database specific roles
+  # - database-mariadb
+  # - database-postgresql
+
+# Downloaders
   # - docker-alltube
-  # - docker-bookstack
   # - docker-delugevpn
   # - docker-goautoyt
   # - docker-nzbget
-  # - docker-nzbhydra
+
+# Media Managers
+  # - docker-bazarr
+  # - docker-bazarr4k
   # - docker-lazylibrarian
   # - docker-lidarr
   # - docker-mylar
-  # - docker-nextcloud
-  # - docker-speedtest
   # - docker-radarr
   # - docker-radarr4k
+  # - docker-readarr
   # - docker-sonarr
   # - docker-sonarr4k
-  # - docker-syncarr-radarr
-  # - docker-syncarr-sonarr
-  # - docker-bazarr
-  # - docker-bazarr4k
-  # - docker-plex
-  # - docker-tautulli
-  # - docker-synclounge
+
+# Public Services
+  # - docker-bookstack
+  # - docker-emby
+  # - docker-mellow
+  # - docker-nextcloud
   # - docker-ombi
   # - docker-ombi4k
   # - docker-organizr
-  # - docker-mellow
+  # - docker-plex
+  # - docker-speedtest
+  # - docker-synclounge
+
+# Statistics
+  # - docker-embystat
+  # - docker-grafana
+  # - docker-tautulli
+  # - docker-varken
+
+# Support Services
+  # - docker-nzbhydra
+  # - docker-syncarr-radarr
+  # - docker-syncarr-sonarr
   # - docker-traktarr
   # - docker-tdarr
-  # - docker-emby
-  # - docker-embystat
-
-# Not implemented fully yet
-  # - docker-readarr
 ...
