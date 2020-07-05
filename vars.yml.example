@@ -307,13 +307,12 @@ containers:
     tld: "{{ domain }}"
   synclounge:
     network: "{{ networks.docker.primary.name }}"
-    port: "8088"
-    subdomain: "synclounge"
-    tld: "{{ domain }}"
-  synclounge_server:
-    network: "{{ networks.docker.primary.name }}"
-    port: "8089"
-    subdomain: "synclounge-server"
+    port: 
+      0: "8088"
+      1: "8089"
+    subdomain: 
+      0: "synclounge"
+      1: "synclounge-server"
     tld: "{{ domain }}"
   tautulli:
     network: "{{ networks.docker.primary.name }}"

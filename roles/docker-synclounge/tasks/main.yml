@@ -11,13 +11,13 @@
     value: "{{ containers.traefik.subdomain }}.{{ domain }}"
     zone: "{{ domain }}"
   loop:
-    - "{{ containers.synclounge.subdomain }}"
-    - "{{ containers.synclounge_server.subdomain }}"
+    - "{{ containers.synclounge.subdomain.0 }}"
+    - "{{ containers.synclounge.subdomain.1 }}"
 
 - name: Start Synclounge
   docker_container:
-    name: "{{ containers.synclounge.subdomain }}"
-    hostname: "{{ containers.synclounge.subdomain }}"
+    name: "{{ containers.synclounge.subdomain.0 }}"
+    hostname: "{{ containers.synclounge.subdomain.0 }}"
     state: started
     restart_policy: unless-stopped
     image: starbix/synclounge
@@ -30,16 +30,16 @@
     env:
       autoJoin: "{{ synclounge.autojoin }}" # Should Synclounge join Synclounge Server automatically?
       autoJoinRoom: "{{ synclounge.autojoinroom }}" # Should Synclounge join Synclounge Server room automatically?
-      autoJoinServer: "https://{{ containers.synclounge_server.subdomain }}.{{ containers.synclounge_server.tld }}/slserver" # Synclounge Server to auto join
-      accessUrl: "{{ containers.synclounge.subdomain }}.{{ containers.synclounge.tld }}" # Synclouge access URL
-      DOMAIN: "{{ containers.synclounge.subdomain }}.{{ containers.synclounge.tld }}" # Domain
+      autoJoinServer: "https://{{ containers.synclounge.subdomain.1 }}.{{ containers.synclounge.tld }}/slserver" # Synclounge Server to auto join
+      accessUrl: "{{ containers.synclounge.subdomain.0 }}.{{ containers.synclounge.tld }}" # Synclouge access URL
+      DOMAIN: "{{ containers.synclounge.subdomain.0 }}.{{ containers.synclounge.tld }}" # Domain
       PGID: "{{ users.primary.gid }}" # Pass proper UID to the container
       PUID: "{{ users.primary.uid }}" # Pass proper GID to the container
       TZ: "{{ timezone }}"
     networks_cli_compatible: no
     networks:
       - name: "{{ containers.synclounge.network }}"
-        aliases: "{{ containers.synclounge.subdomain }}"
+        aliases: "{{ containers.synclounge.subdomain.0 }}"
     purge_networks: yes
     pull: true 
     labels:
@@ -49,20 +49,20 @@
       traefik.enable: "true"
       ## HTTP Routers - Lobby
       traefik.http.routers.synclounge-rtr.entrypoints: "https"
-      traefik.http.routers.synclounge-rtr.rule: "Host(`{{ containers.synclounge.subdomain }}.{{ containers.synclounge.tld }}`)"
+      traefik.http.routers.synclounge-rtr.rule: "Host(`{{ containers.synclounge.subdomain.0 }}.{{ containers.synclounge.tld }}`)"
       traefik.http.routers.synclounge-rtr.tls: "true"
       ## HTTP Services - Lobby
       traefik.http.routers.synclounge-rtr.service: "synclounge-svc"
-      traefik.http.services.synclounge-svc.loadbalancer.server.port: "{{ containers.synclounge.port | default('80') }}"
+      traefik.http.services.synclounge-svc.loadbalancer.server.port: "{{ containers.synclounge.port.0 | default('80') }}"
       ## Middlewares - Lobby
       traefik.http.routers.synclounge-rtr.middlewares: "chain-no-auth@file"
       ## HTTP Routers - Server
       traefik.http.routers.synclounge_server-rtr.entrypoints: "https"
-      traefik.http.routers.synclounge_server-rtr.rule: "Host(`{{ containers.synclounge_server.subdomain }}.{{ containers.synclounge_server.tld }}`)"
+      traefik.http.routers.synclounge_server-rtr.rule: "Host(`{{ containers.synclounge.subdomain.1 }}.{{ containers.synclounge.tld }}`)"
       traefik.http.routers.synclounge_server-rtr.tls: "true"
       ## HTTP Services - Server
       traefik.http.routers.synclounge_server-rtr.service: "synclounge_server-svc"
-      traefik.http.services.synclounge_server-svc.loadbalancer.server.port: "{{ containers.synclounge_server.port | default('80') }}"
+      traefik.http.services.synclounge_server-svc.loadbalancer.server.port: "{{ containers.synclounge.port.1 | default('8089') }}"
       ## Middlewares - Server
       traefik.http.routers.synclounge_server-rtr.middlewares: "chain-no-auth@file"
 ...
