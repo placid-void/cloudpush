@@ -60,14 +60,14 @@
       max-file: "3"
     volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}:/config:z"
-      - "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}/cont-init.d/30-config:/etc/cont-init.d/30-config:z"
+      - "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}/cont-init.d/30-config:/etc/cont-init.d/30-config:z" # Bootstrap script
       - "{{ directories.host_drive_root }}:{{ directories.drive_root }}:rshared"
     env:
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
-      PLEX_CLAIM: "{{ api_keys.plextoken }}"
+      PLEX_CLAIM: "{{ api_keys.plextoken }}" # Plex server claim ID https://plex.tv/claim
       TZ: "{{ timezone }}"
-      VERSION: "docker"
+      VERSION: "latest" # The container will upgrade to the latest version of Plex the server operator is entitled to
       UMASK_SET: "{{ mount_options.umask }}" # File UMASK
     devices: "{{ '/dev/dri:/dev/dri' if dev_dri.stat.exists == True | default(False) else omit }}" # Pass GPU to the container, if it exists
     etc_hosts: # Block Plex Spying
