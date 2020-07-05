@@ -29,7 +29,7 @@ users:
 system_groups:
   - { group: "docker", gid: "998" }
   - { group: "grafana", gid: "472" }
-  - { group: "wheel", gid: "999" }
+  - { group: "wheel", gid: "997" }
 
 # SSH keys of primary and secondary users
 ssh:
@@ -117,6 +117,10 @@ containers:
     network: "{{ networks.docker.primary.name }}"
     port: "6555"
     subdomain: "embystat"
+    tld: "{{ domain }}"
+  fail2ban:
+    network: "{{ networks.docker.primary.name }}"
+    subdomain: "fail2ban"
     tld: "{{ domain }}"
   gc:
     network: "{{ networks.docker.primary.name }}"
@@ -410,13 +414,6 @@ api_keys:
   sonarr: "{{ lookup('lastpass', '****/Sonarr', field='api') }}"
   sonarr4k: "{{ lookup('lastpass', '****/Sonarr4K', field='api') }}"
   tautulli: "{{ lookup('lastpass', '****/Tautulli', field='api') }}"
-  dev: 
-    ombi: "{{ lookup('lastpass', '****/Ombi', field='api') }}"
-    ombi4k: "{{ lookup('lastpass', '****/Ombi4K', field='api') }}"
-    radarr: "{{ lookup('lastpass', '****/Radarr', field='api') }}"
-    radarr4k: "{{ lookup('lastpass', '****/Radarr4K', field='api') }}"
-    sonarr: "{{ lookup('lastpass', '****/Sonarr', field='api') }}"
-    sonarr4k: "{{ lookup('lastpass', '****/Sonarr4K', field='api') }}"
 
 # Oauth container vars
 oauth:
@@ -461,6 +458,7 @@ mount_options:
   tpslimit: "4"
   transfers: "4"
   umask: "002"
+  upload_limit: "true"
   user_agent: 2ZCrRi2CKFvz9GQQ
   vfs_cache_max_age: 3h
   vfs_cache_mode: writes
