@@ -132,6 +132,6 @@ After modifying your own vars file, the host-setup role should be ran solo. This
 
 ## 🎉 Acknowledgements <a name = "acknowledgement"></a>
 
-- Hat tip to anyone whose code was used
-- Inspiration
-- References
+- This wouldn't be possible without the excellent developers making the applications included in this playbook. 
+- [@PlexGuide.com](https://github.com/plexguide/PlexGuide.com) was a great inspiration when I first got started.
+- [@ajkis](https://github.com/ajkis) has made excellent scripts that are included in this repo, as they have been customized for this playbook.
