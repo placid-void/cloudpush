@@ -53,7 +53,7 @@ After modifying your own vars file, the host-setup role should be ran solo. This
 - [GC](https://hub.docker.com/r/spotify/docker-gc) - Docker Garbage Collection
 - [Rclone](https://hub.docker.com/r/rclone/rclone) - Mounts Cloud Storage to the host
 - [Traefik](https://hub.docker.com/_/traefik) - Reverse Proxy
-- [Watchtower](https://hub.docker.com/r/containrrr/watchtower) - # Update Containers
+- [Watchtower](https://hub.docker.com/r/containrrr/watchtower) - Update Containers
 
 # Administration
 
