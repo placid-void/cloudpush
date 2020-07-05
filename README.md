@@ -3,8 +3,6 @@
 <div align="center">
 
 [![Status](https://img.shields.io/badge/status-active-success.svg)]()
-[![GitHub Issues](https://img.shields.io/github/issues/placid-void/cloudpush.svg)](https://github.com/placid-void/cloudpush/issues)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](/LICENSE)
 
 </div>
 
