@@ -52,14 +52,14 @@ After modifying your own vars file, the host-setup role should be ran solo. This
 - [Fail2Ban](https://hub.docker.com/r/crazymax/fail2ban) - Harden and secure the host
 - [GC](https://hub.docker.com/r/spotify/docker-gc) - Docker Garbage Collection
 - [Rclone](https://hub.docker.com/r/rclone/rclone) - Mounts Cloud Storage to the host
-- [Traefik](https://hub.docker.com/_/traefik) - # Reverse Proxy
+- [Traefik](https://hub.docker.com/_/traefik) - Reverse Proxy
 - [Watchtower](https://hub.docker.com/r/containrrr/watchtower) - # Update Containers
 
 # Administration
 
-- [Adminer](https://hub.docker.com/_/adminer) - # Database Administration
-- [cAdvisor](https://github.com/google/cadvisor) - # Docker Administration
-- [CloudBeaver](https://hub.docker.com/r/dalongrong/cloudbeaver) - # Database Administration
+- [Adminer](https://hub.docker.com/_/adminer) - Database Administration
+- [cAdvisor](https://github.com/google/cadvisor) - Docker Administration
+- [CloudBeaver](https://hub.docker.com/r/dalongrong/cloudbeaver) - Database Administration
 - [Portainer](https://hub.docker.com/r/portainer/portainer) - Docker Administration
 - [Promgen](https://hub.docker.com/r/line/promgen) - Prometheus Administration
 
