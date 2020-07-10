@@ -6,13 +6,23 @@
     state: directory
     setype: container_file_t
   loop:
-    - "{{ containers.fail2ban.subdomain }}"
+    - "{{ containers.fail2ban.subdomain }}/action.d"
+    - "{{ containers.fail2ban.subdomain }}/filter.d"
+    - "{{ containers.fail2ban.subdomain }}/jail.d"
 
-- name: Verify required files with correct permissions are created
-  copy:
-    src: "files/"
-    dest: "{{ directories.container_root }}/{{ containers.fail2ban.subdomain }}"
+- name: Verify templated required files with correct permissions are created
+  template:
+    src: "templates/{{ item }}.j2"
+    dest: "{{ directories.container_root }}/{{ containers.fail2ban.subdomain }}/{{ item }}"
     mode: 0640
+  loop:
+    - "filter.d/traefik-404.local"
+    - "filter.d/traefik-badbots.local"
+    - "filter.d/traefik-botsearch.local"
+    - "jail.d/default.local"
+    - "jail.d/recidive.local"
+    - "jail.d/sshd.local"
+    - "jail.d/traefik.local"
 
 - name: Start Fail2ban
   docker_container:
@@ -29,18 +39,16 @@
       - "{{ directories.container_root }}/{{ containers.fail2ban.subdomain }}:/data:z"
       - "/var/log:/var/log:ro"
     env:
-      F2B_DB_PURGE_AGE: "7d"
-      F2B_IPTABLES_CHAIN: "INPUT"
-      F2B_LOG_LEVEL: "INFO"
-      F2B_LOG_TARGET: "STDOUT"
-      TZ: "{{ timezone }}"
+      F2B_DB_PURGE_AGE: "7d" # Age at which bans should be purged from the database (default 1d)
+      F2B_IPTABLES_CHAIN: "INPUT" # Specifies the iptables chain to which the Fail2Ban rules should be added (default DOCKER-USER)
+      F2B_LOG_LEVEL: "INFO" # Log level output (default INFO)
+      F2B_LOG_TARGET: "STDOUT" # Set the log target. This could be a file, SYSLOG, STDERR or STDOUT (default STDOUT)
+      TZ: "{{ timezone }}" # The timezone assigned to the container (default UTC)
     capabilities: 
       - NET_ADMIN
       - NET_RAW
     networks_cli_compatible: no
-    networks:
-      - name: "{{ containers.fail2ban.network }}"
-        aliases: "{{ containers.fail2ban.subdomain }}"
+    network_mode: host
     purge_networks: yes
     pull: true
     labels:

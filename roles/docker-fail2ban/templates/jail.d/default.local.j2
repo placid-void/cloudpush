@@ -1,0 +1,10 @@
+[DEFAULT]
+action = %(action_mwl)s
+bantime = 1d
+destemail = root@localhost
+sender = root@$(hostname -f)
+
+# "ignoreip" can be an IP address, a CIDR mask or a DNS host. Fail2ban will not
+# ban a host which matches an address in this list. Several addresses can be
+# defined using space separator.
+ignoreip = 127.0.0.1/8 {{ networks.docker.primary.subnet }} # Your IP address

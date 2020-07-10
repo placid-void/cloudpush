@@ -119,7 +119,6 @@ containers:
     subdomain: "embystat"
     tld: "{{ domain }}"
   fail2ban:
-    network: "{{ networks.docker.primary.name }}"
     subdomain: "fail2ban"
     tld: "{{ domain }}"
   gc:
