@@ -14,22 +14,43 @@
 - name: Verify required directories with correct permissions are created
   file:
     recurse: yes
-    path: "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/scripts"
+    path: "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/{{ item }}"
     owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
     state: directory
     setype: container_file_t
+  loop: 
+    - "cont-init.d"
+    - "scripts"
 
 - name: Verify required files with correct permissions are created
   copy:
-    src: "{{ item }}"
-    dest: "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/scripts/{{ item }}"
+    src: "99-requests.sh"
+    dest: "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/cont-init.d/99-requests.sh"
     owner: "{{ users.primary.user }}"
     group: "{{ users.primary.group }}"
     mode: 0770
-  loop:
-    - "99-requests.sh"
-    - "kill_stream.py"
+
+- name: Clone JBOPS git for use with Tautulli
+  git:
+    repo: "{{ item }}"
+    dest: "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/scripts/JBOPS"
+  loop: 
+    - "https://github.com/blacktwin/JBOPS.git"
+
+- name: Verify required directories with correct permissions are created
+  file:
+    mode: 0770
+    path: "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/scripts/JBOPS/{{ item }}/"
+    recurse: yes
+    state: directory
+  loop: 
+    - "fun"
+    - "killstream"
+    - "maps"
+    - "notify"
+    - "reporting"
+    - "utility"
 
 - name: Start Tautulli
   docker_container:
@@ -46,9 +67,13 @@
       max-file: "3"
     volumes: # Mount required directories with the container
       - "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}:/config:z"
-      - "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/scripts/99-requests.sh:/etc/cont-init.d/99-requests.sh:z"
+      - "{{ directories.container_root }}/{{ containers.tautulli.subdomain }}/cont-init.d/99-requests.sh:/etc/cont-init.d/99-requests.sh:z"
       - "{{ directories.container_root }}/{{ containers.plex.subdomain.0 }}/Library/Application Support/Plex Media Server/Logs:/logs:ro" # Mount Plex Server logs
     env:
+      PLEXAPI_AUTH_MYPLEX_PASSWORD: "{{ plex.password }}"
+      PLEXAPI_AUTH_MYPLEX_USERNAME: "{{ plex.username }}"
+      PLEXAPI_AUTH_SERVER_BASEURL: "https://{{ containers.plex.subdomain }}.{{ containers.plex.tld }}"
+      PLEXAPI_AUTH_SERVER_TOKEN: "{{ api_keys.plextoken }}"
       PUID: "{{ users.primary.uid }}" # Pass proper UID to the container
       PGID: "{{ users.primary.gid }}" # Pass proper GID to the container
       TZ: "{{ timezone }}"

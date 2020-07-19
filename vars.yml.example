@@ -685,4 +685,9 @@ redis:
   password: "{{ lookup('lastpass', '****/Redis', field='password') }}"
   secret_key: "{{ lookup('lastpass', '****/Redis', field='secret_key') }}"
   username: "{{ lookup('lastpass', '****/Redis', field='username') }}"
+
+# Plex.tv vars
+plex:
+  password: "{{ lookup('lastpass', 'Entertainment/Plex', field='password') }}"
+  username: "{{ lookup('lastpass', 'Entertainment/Plex', field='username') }}"
 ...
