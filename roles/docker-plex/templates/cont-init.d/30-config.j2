@@ -5,3 +5,7 @@ apt-get update
 apt-get install -y python3 python3-pip sqlite3 # Required for plex scripts
 pip3 install --upgrade pip
 pip3 install requests # Required for plex scripts
+
+# Create directory for transcodes
+mkdir /transcode
+chown abc:abc /transcode
